@@ -16,6 +16,7 @@ import (
 
 	"github.com/adrianpk/poslan/internal/config"
 	c "github.com/adrianpk/poslan/internal/config"
+	"github.com/adrianpk/poslan/pkg/auth"
 	"github.com/adrianpk/poslan/pkg/mailer/amazon"
 	"github.com/go-kit/kit/log"
 	zipkin "github.com/openzipkin/zipkin-go"
@@ -48,13 +49,12 @@ func makeService(ctx context.Context, cfg *c.Config, log log.Logger) *service {
 
 // Init a service instance.
 func (svc *service) Init() (Service, error) {
-	var s service
-
-	// s = addLogging(svc, svc.logger)
+	var s Service
+	s = addLogging(svc, svc.logger)
 	// s = addTracing(svc)
-	// s = addInstrumentation(svc)
+	s = addInstrumentation(svc)
 
-	return &s, nil
+	return s, nil
 }
 
 func initAmazon(s *service) chan bool {
@@ -108,6 +108,11 @@ func addInstrumentation(svc Service) Service {
 		return instrumentationMiddleware{svc.Logger(), m.ReqCount, m.ReqLatency, m.CountResult, svc}
 	}
 	return svc
+}
+
+func addAuthentication(svc Service) Service {
+	auth := auth.Server{}
+	return authenticationMiddleware{svc.Logger(), auth, svc}
 }
 
 func makeLogger() log.Logger {
