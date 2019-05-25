@@ -63,6 +63,8 @@ deps:
 	$(GO_GET) -u golang.org/x/crypto
 	$(GO_GET) -u gopkg.in/yaml.v2
 	$(GO_GET) -u honnef.co/go/tools
+	$(GO_GET) -u github.com/dgrijalva/jwt-go
+	$(GO_GET) -u github.com/go-kit/kit/auth/jwt
 
 build-stage:
 	$(MAKE_CMD) build
