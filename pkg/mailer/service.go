@@ -44,9 +44,9 @@ func (s *service) SignOut(id uuid.UUID) error {
 func (s *service) Send(to, cc, bcc, subject, body string) error {
 	from := "fix:username" // TODO: Get from user in session data.
 	m := makeEmail(from, to, cc, bcc, subject, body)
-	s.logger.Log("message", fmt.Sprintf("+v", m))
+	s.logger.Log("message", fmt.Sprintf("%+v", m))
 
-	return errors.New("not implemented:")
+	return errors.New("not implemented")
 }
 
 // Misc
