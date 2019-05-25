@@ -54,10 +54,10 @@ func (svc *service) Init() (Service, error) {
 	// s = addTracing(svc)
 	// s = addInstrumentation(svc)
 
-	return s, nil
+	return &s, nil
 }
 
-func initAmazon(s service) chan bool {
+func initAmazon(s *service) chan bool {
 	ok := make(chan bool)
 	go func() {
 		defer close(ok)

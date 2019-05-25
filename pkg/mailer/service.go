@@ -44,18 +44,18 @@ type service struct {
 // Interface implementation
 
 // SignIn lets a user sign in providing username and password.
-func (s service) SignIn(username, password string) (*model.User, error) {
+func (s *service) SignIn(username, password string) (*model.User, error) {
 	return &model.User{}, errors.New("not implemented")
 }
 
 // SignOut lets a user sign out.
-func (s service) SignOut(id uuid.UUID) error {
+func (s *service) SignOut(id uuid.UUID) error {
 	// TODO: Close session implementation.
 	return errors.New("not implemented")
 }
 
 // Send lets the user send a mail.
-func (s service) Send(to, cc, bcc, subject, body string) error {
+func (s *service) Send(to, cc, bcc, subject, body string) error {
 
 	from := "fix:username" // TODO: Get from user in session data.
 	m := makeEmail(from, to, cc, bcc, subject, body)
@@ -67,7 +67,7 @@ func (s service) Send(to, cc, bcc, subject, body string) error {
 // Misc
 
 // Logger returns service imterface implemention logger.
-func (s service) Logger() log.Logger {
+func (s *service) Logger() log.Logger {
 	return s.logger
 }
 
