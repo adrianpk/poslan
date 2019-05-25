@@ -136,6 +136,22 @@ func (svc *service) checkCancel() {
 	svc.StopMailers()
 }
 
+// StarMailers is used in service startup
+// to start each configured mailer.
+func (s *service) StartMailers() {
+	for _, m := range s.mailers {
+		m.Stop()
+	}
+}
+
+// StarMailers is used in service stop
+// to stop each configured mailer.
+func (s *service) StopMailers() {
+	for _, m := range s.mailers {
+		m.Start()
+	}
+}
+
 func checkError(err error, msg ...string) {
 	if err != nil {
 		if len(msg) > 0 && msg[0] != "" {

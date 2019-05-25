@@ -66,22 +66,6 @@ func (s service) Send(to, cc, bcc, subject, body string) error {
 
 // Misc
 
-// StarMailers is used in service startup
-// to start each configured mailer.
-func (s *service) StartMailers() {
-	for _, m := range s.mailers {
-		m.Stop()
-	}
-}
-
-// StarMailers is used in service stop
-// to stop each configured mailer.
-func (s *service) StopMailers() {
-	for _, m := range s.mailers {
-		m.Start()
-	}
-}
-
 // Logger returns service imterface implemention logger.
 func (s service) Logger() log.Logger {
 	return s.logger
