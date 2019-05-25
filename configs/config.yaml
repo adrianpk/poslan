@@ -7,9 +7,7 @@ mailer:
     - name: "amazon"
       type: "amazon-ses"
       enabled: true
-      apiKey: am1
 
     - name: "sendgrid"
       type: "sendgrid"
       enabled: true
-      apiKey: sg1
