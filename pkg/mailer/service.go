@@ -20,18 +20,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var (
-// jwtKeys *config.JWTKeys
-)
-
-// Service provides authentication and authorization services
-type Service interface {
-	SignIn(username, password string) (*model.User, error)
-	SignOut(id uuid.UUID) error
-	Send(to, cc, bcc, subject, body string) error
-	Logger() log.Logger
-}
-
 type service struct {
 	mux     sync.Mutex
 	name    string
@@ -40,8 +28,6 @@ type service struct {
 	logger  log.Logger
 	mailers []Mailer
 }
-
-// Interface implementation
 
 // SignIn lets a user sign in providing username and password.
 func (s *service) SignIn(username, password string) (*model.User, error) {
@@ -56,7 +42,6 @@ func (s *service) SignOut(id uuid.UUID) error {
 
 // Send lets the user send a mail.
 func (s *service) Send(to, cc, bcc, subject, body string) error {
-
 	from := "fix:username" // TODO: Get from user in session data.
 	m := makeEmail(from, to, cc, bcc, subject, body)
 	s.logger.Log("message", fmt.Sprintf("+v", m))

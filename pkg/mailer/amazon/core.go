@@ -22,6 +22,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 )
 
+// Mailer is an amazon Mailer.
+type Mailer struct {
+	ctx    context.Context
+	cfg    *config.Config
+	logger log.Logger
+	client *ses.SES
+}
+
 // Init amazon SES mail server handler.
 func Init(ctx context.Context, cfg *config.Config, log log.Logger) (*Mailer, error) {
 	// Initialize a new mailer.
