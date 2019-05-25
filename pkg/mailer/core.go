@@ -82,14 +82,15 @@ func initAmazon(s *service) chan bool {
 }
 
 // Middleware
-// func addLogging(s Service, logger log.Logger) service {
-// 	if loggingOn {
-// 		return loggingMiddleware{logger, svc}
-// 	}
-// 	return svc
-// }
+func addLogging(svc Service, logger log.Logger) Service {
+	if loggingOn {
+		return loggingMiddleware{logger: logger, next: svc}
+	}
+	return svc
+}
 
-// func addTracing(s Service) service {
+// TODO: Implement tracing middleware.
+// func addTracing(svc Service) service {
 // 	if tracingOn {
 // 		// Tracer
 // 		tracer, err := makeTracer()
@@ -101,13 +102,13 @@ func initAmazon(s *service) chan bool {
 // 	return svc
 // }
 
-// func addInstrumentation(s Service) service {
-// 	if instrumentationOn {
-// 		m := instrumentationMeters()
-// 		return instrumentationMiddleware{svc.Logger(), m.ReqCount, m.ReqLatency, m.CountResult, svc}
-// 	}
-// 	return svc
-// }
+func addInstrumentation(svc Service) Service {
+	if instrumentationOn {
+		m := instrumentationMeters()
+		return instrumentationMiddleware{svc.Logger(), m.ReqCount, m.ReqLatency, m.CountResult, svc}
+	}
+	return svc
+}
 
 func makeLogger() log.Logger {
 	w := log.NewSyncWriter(os.Stdout)
