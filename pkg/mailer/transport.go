@@ -24,12 +24,12 @@ func Run() {
 	ctx, cancel := context.WithCancel(context.Background())
 	go checkSigTerm(cancel)
 
-	// Config
-	cfg, err := c.Load()
-	checkError(err)
-
 	// Logger
 	logger := makeLogger()
+
+	// Config
+	cfg, err := c.Load(logger)
+	checkError(err)
 
 	// Service
 	svc, err := makeService(ctx, cfg, logger).Init()
