@@ -30,7 +30,7 @@ func (ac *AppConfig) ServerPortFmt() string {
 type ProviderConfig struct {
 	Name     string `yaml:"name"`
 	Type     string `yaml:"type"`
-	Enabled  string `yaml:"enabled"`
+	Enabled  bool   `yaml:"enabled"`
 	TestOnly bool   `yaml:"test"`
 }
 
