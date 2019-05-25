@@ -6,12 +6,11 @@ require (
 	github.com/VividCortex/gohistogram v1.0.0 // indirect
 	github.com/aws/aws-sdk-go v1.19.38
 	github.com/go-kit/kit v0.8.0
-	github.com/go-logfmt/logfmt v0.4.0 // indirect
-	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.2 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/openzipkin/zipkin-go v0.1.6
+	github.com/prometheus/client_golang v0.9.3
 	github.com/stretchr/testify v1.3.0 // indirect
 	golang.org/x/crypto v0.0.0-20190513172903-22d7a77e9e5f
 	golang.org/x/net v0.0.0-20190522155817-f3200d17e092 // indirect
