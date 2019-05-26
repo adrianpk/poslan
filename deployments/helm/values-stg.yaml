@@ -1,0 +1,43 @@
+name: poslan
+
+service:
+  type: NodePort
+  nodePort: ""
+  port: 2011
+
+deployment:
+  replicaCount: 1
+  port: 2011
+
+  image:
+    private: true
+    repository: adrianpksw
+    tag: stg
+    pullPolicy: Always
+    volumeMounts:
+      configSecretMountPath: /configs
+    volumes:
+      configSecretMountName: config-volume
+      configSecretName: poslan-config
+  container:
+    env:
+      - name: POSLAN_SERVER_PORT
+        value: "8080"
+      - name: POSLAN_LOG_LEVEL
+        value: "debug"
+      - name: PROVIDER_NAME_1
+        value: "amazon"
+      - name: PROVIDER_TYPE_1
+        value: "amazon-ses"
+      - name: PROVIDER_ENABLED_1
+        value: "true"
+      - name: PROVIDER_TESTONLY_1
+        value: "false"
+      - name: PROVIDER_NAME_2
+        value: "sendgrid"
+      - name: PROVIDER_TYPE_2
+        value: "sendgrid"
+      - name: PROVIDER_ENABLED_2
+        value: "true"
+      - name: PROVIDER_TESTONLY_2
+        value: "false"

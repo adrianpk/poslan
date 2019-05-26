@@ -1,0 +1,25 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{.Values.name}}-app
+  labels:
+    name: {{.Values.name}}
+    component: app
+    type: service
+spec:
+  type: "{{ .Values.service.type }}"
+  {{- if .Values.service.loadBalancerIP }}
+  loadBalancerIP: "{{ .Values.service.loadBalancerIP }}"
+  {{- end }}
+  selector:
+    name: {{.Values.name}}
+    component: app
+    type: container
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{.Values.service.port}}
+      targetPort: {{.Values.service.targetPort}}
+      {{- if (and (eq .Values.service.type "NodePort") (not (empty .Values.service.nodePort))) }}
+      nodePort: {{ .Values.service.nodePort }}
+      {{- end }}
