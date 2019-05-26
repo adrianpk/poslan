@@ -4,7 +4,9 @@ package mailer
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+	"strings"
 
 	c "github.com/adrianpk/poslan/internal/config"
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -15,6 +17,10 @@ const (
 	tracingOn         = true
 	instrumentationOn = true
 	transactionOn     = true
+)
+
+var (
+	authTokenCtxKey = contextKey("auth-token")
 )
 
 // Run the mailer service.
@@ -56,24 +62,28 @@ func SignInHandler(svc Service) *httptransport.Server {
 
 // SignOutHandler manages signout up process.
 func SignOutHandler(svc Service) *httptransport.Server {
+	opts := httptransport.ServerBefore(tokenToContext)
 	return httptransport.NewServer(
 		makeSignOutEndpoint(svc),
 		decodeSignOutRequest,
 		encodeResponse,
+		opts,
 	)
 }
 
 // SendHandler manages email sending.
 func SendHandler(svc Service) *httptransport.Server {
+	opts := httptransport.ServerBefore(tokenToContext)
 	return httptransport.NewServer(
 		makeSendEndpoint(svc),
 		decodeSendRequest,
 		encodeResponse,
+		opts,
 	)
 }
 
 // Decoders
-func decodeSignInRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeSignInRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	var request signInRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return nil, err
@@ -81,23 +91,47 @@ func decodeSignInRequest(_ context.Context, r *http.Request) (interface{}, error
 	return request, nil
 }
 
-func decodeSignOutRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeSignOutRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	var request signOutRequest
+	tokenToContext(ctx, r)
+
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return nil, err
 	}
+
 	return request, nil
 }
 
-func decodeSendRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeSendRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	var request sendRequest
+	tokenToContext(ctx, r)
+
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return nil, err
 	}
+
 	return request, nil
 }
 
 // Encoders
 func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	return json.NewEncoder(w).Encode(response)
+}
+
+func readToken(r *http.Request) (string, error) {
+	token := r.Header.Get("Authorization")
+	splitToken := strings.Split(token, "Bearer")
+	if len(splitToken) != 2 {
+		return "", errors.New("invalid token format")
+	}
+	return strings.TrimSpace(splitToken[1]), nil
+}
+
+func tokenToContext(ctx context.Context, r *http.Request) context.Context {
+	token := r.Header.Get("Authorization")
+	token, err := readToken(r)
+	if err != nil {
+		return ctx
+	}
+	return context.WithValue(ctx, authTokenCtxKey, token)
 }

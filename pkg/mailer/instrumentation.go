@@ -24,36 +24,36 @@ type instrumentationMiddleware struct {
 }
 
 // SignIn is an instrumentation middleware wrapper over another interface implementation of SignIn.
-func (mw instrumentationMiddleware) SignIn(username, password string) (output string, err error) {
+func (mw instrumentationMiddleware) SignIn(ctx context.Context, clientID, secret string) (output string, err error) {
 	defer func(begin time.Time) {
 		lvs := []string{"method", "SignIn", "error", fmt.Sprint(err != nil)}
 		mw.requestCount.With(lvs...).Add(1)
 		mw.requestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mw.next.SignIn(username, password)
+	return mw.next.SignIn(ctx, clientID, secret)
 }
 
 // SignOut is an instrumentation middleware wrapper over another interface implementation of SignOut.
-func (mw instrumentationMiddleware) SignOut(id uuid.UUID) (err error) {
+func (mw instrumentationMiddleware) SignOut(ctx context.Context, id uuid.UUID) (err error) {
 	defer func(begin time.Time) {
 		lvs := []string{"method", "SignOut", "error", fmt.Sprint(err != nil)}
 		mw.requestCount.With(lvs...).Add(1)
 		mw.requestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mw.next.SignOut(id)
+	return mw.next.SignOut(ctx, id)
 }
 
 // Send is an instrumentation middleware wrapper over another interface implementation of Send.
-func (mw instrumentationMiddleware) Send(to, cc, bcc, subject, body string) (err error) {
+func (mw instrumentationMiddleware) Send(ctx context.Context, to, cc, bcc, subject, body string) (err error) {
 	defer func(begin time.Time) {
 		lvs := []string{"method", "Send", "error", fmt.Sprint(err != nil)}
 		mw.requestCount.With(lvs...).Add(1)
 		mw.requestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mw.next.Send(to, cc, bcc, subject, body)
+	return mw.next.Send(ctx, to, cc, bcc, subject, body)
 }
 
 // Config returns service context.

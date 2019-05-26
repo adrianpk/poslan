@@ -16,13 +16,13 @@ import (
 )
 
 func makeSignInEndpoint(svc Service) endpoint.Endpoint {
-	return func(_ context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(signInRequest)
 
 		reqstr := fmt.Sprintf("Req: %+v", req)
 		svc.Logger().Log("level", c.LogLevel.Info, "req", reqstr)
 
-		user, err := svc.SignIn(req.Username, req.Password)
+		user, err := svc.SignIn(ctx, req.ClientID, req.Secret)
 		if err != nil {
 			return signInResponse{user, err.Error()}, nil
 		}
@@ -32,13 +32,13 @@ func makeSignInEndpoint(svc Service) endpoint.Endpoint {
 }
 
 func makeSignOutEndpoint(svc Service) endpoint.Endpoint {
-	return func(_ context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(signOutRequest)
 
 		reqstr := fmt.Sprintf("Req: %+v", req)
 		svc.Logger().Log("level", c.LogLevel.Info, "req", reqstr)
 
-		err := svc.SignOut(req.ID)
+		err := svc.SignOut(ctx, req.ID)
 		if err != nil {
 			return signOutResponse{err.Error()}, nil
 		}
@@ -48,13 +48,13 @@ func makeSignOutEndpoint(svc Service) endpoint.Endpoint {
 }
 
 func makeSendEndpoint(svc Service) endpoint.Endpoint {
-	return func(_ context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(sendRequest)
 
 		reqstr := fmt.Sprintf("Req: %+v", req)
 		svc.Logger().Log("level", c.LogLevel.Info, "req", reqstr)
 
-		err := svc.Send(req.To, req.Cc, req.Bcc, req.Subject, req.Body)
+		err := svc.Send(ctx, req.To, req.Cc, req.Bcc, req.Subject, req.Body)
 		if err != nil {
 			return signOutResponse{err.Error()}, nil
 		}

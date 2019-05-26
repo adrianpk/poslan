@@ -12,15 +12,13 @@ import (
 	"github.com/google/uuid"
 )
 
-// Handler is a mailer handler.
-type Handler struct {
-}
+type contextKey string
 
 // Request & response
 // Sign in
 type signInRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	ClientID string `json:"clientID"`
+	Secret   string `json:"secret"`
 }
 
 type signInResponse struct {
@@ -49,4 +47,8 @@ type sendRequest struct {
 type sendResponse struct {
 	Email *model.Email `json:"email,omitempty"`
 	Err   string       `json:"error,omitempty"`
+}
+
+func (c contextKey) String() string {
+	return "poslan-" + string(c)
 }

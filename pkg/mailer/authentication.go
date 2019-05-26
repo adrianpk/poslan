@@ -9,6 +9,7 @@ package mailer
 
 import (
 	"context"
+	"errors"
 
 	"github.com/adrianpk/poslan/internal/config"
 	"github.com/adrianpk/poslan/pkg/auth"
@@ -25,8 +26,8 @@ type authenticationMiddleware struct {
 }
 
 // SignIn is a logging middleware wrapper over another interface implementation of SignIn.
-func (mw authenticationMiddleware) SignIn(username, password string) (output string, err error) {
-	output, err = mw.auth.Authenticate(username, password)
+func (mw authenticationMiddleware) SignIn(ctx context.Context, clientID, secret string) (output string, err error) {
+	output, err = mw.auth.Authenticate(clientID, secret)
 	if err != nil {
 		return "", err
 	}
@@ -34,14 +35,30 @@ func (mw authenticationMiddleware) SignIn(username, password string) (output str
 }
 
 // SignOut is a logging middleware wrapper over another interface implementation of SignOut.
-func (mw authenticationMiddleware) SignOut(id uuid.UUID) (err error) {
-	err = mw.next.SignOut(id)
+func (mw authenticationMiddleware) SignOut(ctx context.Context, id uuid.UUID) (err error) {
+	token, ok := AuthToken(ctx)
+	if !ok {
+		return errors.New("invalid token")
+	}
+	err = mw.auth.ValidateToken(token)
+	if err != nil {
+		return err
+	}
+	err = mw.next.SignOut(ctx, id)
 	return
 }
 
 // Send is a logging middleware wrapper over another interface implementation of Send.
-func (mw authenticationMiddleware) Send(to, cc, bcc, subject, body string) (err error) {
-	err = mw.next.Send(to, cc, bcc, subject, body)
+func (mw authenticationMiddleware) Send(ctx context.Context, to, cc, bcc, subject, body string) (err error) {
+	token, ok := AuthToken(ctx)
+	if !ok {
+		return errors.New("invalid token")
+	}
+	err = mw.auth.ValidateToken(token)
+	if err != nil {
+		return err
+	}
+	err = mw.next.Send(ctx, to, cc, bcc, subject, body)
 	return
 }
 
@@ -58,4 +75,10 @@ func (mw authenticationMiddleware) Config() *config.Config {
 // Config returns service logger.
 func (mw authenticationMiddleware) Logger() log.Logger {
 	return mw.logger
+}
+
+// AuthToken gets the auth token from the context.
+func AuthToken(ctx context.Context) (token string, ok bool) {
+	token, ok = ctx.Value(authTokenCtxKey).(string)
+	return token, ok
 }
