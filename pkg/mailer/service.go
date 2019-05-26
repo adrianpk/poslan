@@ -14,6 +14,7 @@ import (
 	"sync"
 
 	"github.com/adrianpk/poslan/internal/config"
+	c "github.com/adrianpk/poslan/internal/config"
 	"github.com/adrianpk/poslan/internal/sys"
 	"github.com/adrianpk/poslan/pkg/auth"
 	"github.com/adrianpk/poslan/pkg/model"
@@ -49,12 +50,23 @@ func (s *service) SignOut(ctx context.Context, id uuid.UUID) error {
 
 // Send lets the user send a mail.
 func (s *service) Send(ctx context.Context, to, cc, bcc, subject, body string) error {
-
 	fromName := s.Config().Mailers.Providers[0].Name
 	fromEmail := s.Config().Mailers.Providers[0].Name
 
+	// FIX: We are traying to sens stright from SES
+	// implement Round Robin loop with fallback
+	// in order to distribute delivery load.
+	provider := (s.Providers())[0]
+
 	m := makeEmail(fromName, fromEmail, to, cc, bcc, subject, body)
-	s.logger.Log("message", fmt.Sprintf("%+v", m))
+	_, err := provider.Send(m)
+
+	s.logger.Log(
+		"level", c.LogLevel.Debug,
+		"method", "Send",
+		"email", fmt.Sprintf("%+v", m),
+		"err", err,
+	)
 
 	return errors.New("not implemented")
 }

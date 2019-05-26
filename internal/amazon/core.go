@@ -36,7 +36,7 @@ func Init(ctx context.Context, cfg *config.Config, log log.Logger) (*SESProvider
 }
 
 // Send an email.
-func (p *SESProvider) Send(em model.Email) (resend bool, err error) {
+func (p *SESProvider) Send(em *model.Email) (resend bool, err error) {
 
 	email := newSESEmail(em.From, em.To, em.CC, em.BCC, em.Subject, em.Body, em.Charset)
 
