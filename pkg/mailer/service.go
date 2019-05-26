@@ -14,6 +14,7 @@ import (
 	"sync"
 
 	"github.com/adrianpk/poslan/internal/config"
+	"github.com/adrianpk/poslan/internal/sys"
 	"github.com/adrianpk/poslan/pkg/model"
 	"github.com/go-kit/kit/log"
 	"github.com/google/uuid"
@@ -21,17 +22,17 @@ import (
 )
 
 type service struct {
-	mux     sync.Mutex
-	name    string
-	ctx     context.Context
-	cfg     *config.Config
-	logger  log.Logger
-	mailers []Mailer
+	mux       sync.Mutex
+	name      string
+	ctx       context.Context
+	cfg       *config.Config
+	logger    log.Logger
+	providers []sys.Provider
 }
 
 // SignIn lets a user sign in providing username and password.
-func (s *service) SignIn(username, password string) (*model.User, error) {
-	return &model.User{}, errors.New("not implemented")
+func (s *service) SignIn(username, password string) (string, error) {
+	return "", errors.New("not implemented")
 }
 
 // SignOut lets a user sign out.
@@ -49,7 +50,21 @@ func (s *service) Send(to, cc, bcc, subject, body string) error {
 	return errors.New("not implemented")
 }
 
+// Providers returns service providers.
+func (s *service) Providers() []sys.Provider {
+	return s.providers
+}
+
 // Misc
+// Context returns service context.
+func (s *service) Context() context.Context {
+	return s.ctx
+}
+
+// Config returns service config.
+func (s *service) Config() *config.Config {
+	return s.cfg
+}
 
 // Logger returns service imterface implemention logger.
 func (s *service) Logger() log.Logger {

@@ -8,6 +8,9 @@
 package mailer
 
 import (
+	"context"
+
+	"github.com/adrianpk/poslan/internal/config"
 	"github.com/adrianpk/poslan/pkg/model"
 	"github.com/go-kit/kit/log"
 	"github.com/google/uuid"
@@ -15,10 +18,12 @@ import (
 
 // Service provides authentication and authorization services
 type Service interface {
-	SignIn(username, password string) (*model.User, error)
+	Context() context.Context
+	Config() *config.Config
+	Logger() log.Logger
+	SignIn(username, password string) (string, error)
 	SignOut(id uuid.UUID) error
 	Send(to, cc, bcc, subject, body string) error
-	Logger() log.Logger
 }
 
 // Mailer interface
