@@ -20,7 +20,6 @@ import (
 	"github.com/adrianpk/poslan/pkg/model"
 	"github.com/go-kit/kit/log"
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type service struct {
@@ -105,12 +104,4 @@ func makeEmail(name, from, to, cc, bcc, subject, body string) *model.Email {
 		Body:    body,
 		Charset: charset,
 	}
-}
-
-func passwordMatches(digest, password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(digest), []byte(password))
-	if err != nil {
-		return false
-	}
-	return true
 }
