@@ -70,7 +70,7 @@ func (svc *service) Init() (s Service, err error) {
 	s = addLogging(svc, svc.logger)
 	// s = addTracing(svc)
 	s = addInstrumentation(svc)
-	s = addAuthentication(svc)
+	// s = addAuthentication(svc)
 
 	return s, nil
 }
