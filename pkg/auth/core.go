@@ -75,21 +75,17 @@ func (s Server) ValidateToken(token string) error {
 
 		if v.Errors&jwt.ValidationErrorMalformed != 0 {
 			// Token malformed
-			s.Logger.Log("Msg 1", err.Error())
 			return err
 
 		} else if v.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
 			// Token expired
-			s.Logger.Log("Msg 2", err.Error())
 			return err
 
 		} else {
 			// Other possible error
-			s.Logger.Log("Msg 3", err.Error())
 			return err
 		}
 	}
-	s.Logger.Log("Msg 4", err.Error())
 	return errors.New("invalid token")
 }
 

@@ -24,8 +24,5 @@ See `makefile` for new additions.
 
 ```bash
 $ ./resources/rest/signin.sh
+$ ./resources/rest/send.sh
 ```
-
-
-
-

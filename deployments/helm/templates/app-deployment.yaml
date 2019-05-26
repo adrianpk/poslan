@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.Values.name}}-app
+spec:
+  replicas: {{ .Values.deployment.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 51%
+      maxSurge: 25%
+  selector:
+    matchLabels:
+      name: {{.Values.name}}
+      component: app
+      type: container
+  template:
+    metadata:
+      labels:
+        name: {{.Values.name}}
+        component: app
+        type: container
+    spec:
+            {{- if .Values.deployment.image.private }}
+      imagePullSecrets:
+        - name: regcred
+            {{- end }}
+      containers:
+        - name: {{.Values.name}}-container
+          image: {{.Values.deployment.image.repository}}/{{.Values.name}}:{{.Values.deployment.image.tag}}
+          imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+          {{- if .Values.deployment.resources }}
+          volumeMounts:
+          - name: {{.Values.deployment.image.volumes.configSecretMountName}}
+            mountPath: {{.Values.deployment.image.volumeMounts.configSecretMountPath}}
+            readOnly: true
+          volumes:
+          - name: {{.Values.deployment.image.volumes.configMountName}}
+            secret:
+              secretName: {{.Values.deployment.image.volumes.configSecretName}}
+              defaultMode: 0444
+          resources:
+            requests:
+              memory: {{.Values.deployment.resources.requests.memory}}
+              cpu: {{.Values.deployment.resources.requests.cpu}}
+            limits:
+              memory: {{.Values.deployment.resources.limits.memory}}
+              cpu: {{.Values.deployment.resources.limits.cpu}}
+                {{- end }}
+          env:
+{{ toYaml .Values.deployment.container.env | indent 12 }}
+          {{ $global := . }}
+          {{- if .Values.deployment.env }}
+          {{ range .Values.deployment.env }}
+            - name: {{.name}}
+                    {{- if .value}}
+              value: {{.value}}}
+                    {{- else }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{$global.Values.deployment.env_secrets}}
+                  key: {{.name}}
+                  {{- end }}
+                  {{- end }}
+                  {{- end }}
+          ports:
+            - name: http
+              containerPort: {{default 8080 .Values.deployment.port }}
+              protocol: TCP
