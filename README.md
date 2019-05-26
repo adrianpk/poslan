@@ -26,3 +26,6 @@ See `makefile` for new additions.
 $ ./resources/rest/signin.sh
 $ ./resources/rest/send.sh
 ```
+
+# Notes
+* Container environment variables should be available in control version repository.
