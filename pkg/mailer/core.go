@@ -9,14 +9,18 @@ package mailer
 
 import (
 	"context"
+	"fmt"
 	cmlog "log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	// health "github.com/heptiolabs/healthcheck"
+
+	"github.com/adrianpk/poslan/internal/amazon"
 	"github.com/adrianpk/poslan/internal/config"
 	c "github.com/adrianpk/poslan/internal/config"
-	"github.com/adrianpk/poslan/pkg/mailer/amazon"
+	"github.com/adrianpk/poslan/pkg/auth"
 	"github.com/go-kit/kit/log"
 	zipkin "github.com/openzipkin/zipkin-go"
 	reporter "github.com/openzipkin/zipkin-go/reporter/http"
@@ -39,7 +43,7 @@ func checkSigTerm(cancel context.CancelFunc) {
 
 func makeService(ctx context.Context, cfg *c.Config, log log.Logger) *service {
 	return &service{
-		name:   "poslan",
+		name:   "Poslan",
 		ctx:    ctx,
 		cfg:    cfg,
 		logger: log,
@@ -47,23 +51,37 @@ func makeService(ctx context.Context, cfg *c.Config, log log.Logger) *service {
 }
 
 // Init a service instance.
-func (svc *service) Init() (Service, error) {
-	var s service
+func (svc *service) Init() (s Service, err error) {
+	// FIX: Readiness & liveness checks temporarily disabled.
+	// s.health = health.NewHandler()
+	// TODO: Implement IsAlive(...)
+	// s.health.AddLivenessCheck("live", s.IsAlive(s.cfg))
+	// TODO: Implement IsReady(...)
+	// s.health.AddReadinessCheck("ready", s.IsReady())
+	// http.ListenAndServe(s.cfg.App.Probe.LivenessServerAddress(), s.health)
 
-	// s = addLogging(svc, svc.logger)
+	ok1 := initAmazon(svc)
+	// ok2 := initSesgrid(s)
+
+	if !<-ok1 {
+		return nil, fmt.Errorf("Cannot initialize '%s' service", svc.name)
+	}
+
+	s = addLogging(svc, svc.logger)
 	// s = addTracing(svc)
-	// s = addInstrumentation(svc)
+	s = addInstrumentation(svc)
+	s = addAuthentication(svc)
 
 	return s, nil
 }
 
-func initAmazon(s service) chan bool {
+func initAmazon(svc *service) chan bool {
 	ok := make(chan bool)
 	go func() {
 		defer close(ok)
-		r, err := amazon.Init(s.ctx, s.cfg, s.Logger())
+		p, err := amazon.Init(svc.ctx, svc.cfg, svc.logger)
 		if err != nil {
-			s.logger.Log(
+			svc.logger.Log(
 				"level", config.LogLevel.Error,
 				"package", "main",
 				"method", "initAmazon",
@@ -73,41 +91,59 @@ func initAmazon(s service) chan bool {
 			ok <- false
 			return
 		}
-		s.mux.Lock()
-		s.mailers = append(s.mailers, r)
-		s.mux.Unlock()
+		svc.mux.Lock()
+		svc.providers = append(svc.providers, p)
+		svc.mux.Unlock()
 		ok <- true
 	}()
 	return ok
 }
 
 // Middleware
-// func addLogging(s Service, logger log.Logger) service {
-// 	if loggingOn {
-// 		return loggingMiddleware{logger, svc}
-// 	}
-// 	return svc
-// }
+func addLogging(svc Service, logger log.Logger) Service {
+	if loggingOn {
+		return loggingMiddleware{logger: logger, next: svc}
+	}
+	return svc
+}
 
-// func addTracing(s Service) service {
+// TODO: Implement tracing middleware.
+// func addTracing(svc Service) service {
 // 	if tracingOn {
 // 		// Tracer
 // 		tracer, err := makeTracer()
 // 		if err != nil {
 // 			return svc
 // 		}
-// 		return tracingMiddleware{s.Logger(), tracer, svc}
+// 		return tracingMiddleware{logger: logger, next: svc}
 // 	}
 // 	return svc
 // }
 
-// func addInstrumentation(s Service) service {
-// 	if instrumentationOn {
-// 		m := instrumentationMeters()
-// 		return instrumentationMiddleware{svc.Logger(), m.ReqCount, m.ReqLatency, m.CountResult, svc}
-// 	}
-// 	return svc
-// }
+func addInstrumentation(svc Service) Service {
+	if instrumentationOn {
+		m := instrumentationMeters()
+		return instrumentationMiddleware{
+			svc.Context(),
+			svc.Config(),
+			svc.Logger(),
+			m.ReqCount,
+			m.ReqLatency,
+			m.CountResult,
+			svc}
+	}
+	return svc
+}
+
+func addAuthentication(svc Service) Service {
+	auth := auth.Server{}
+	return authenticationMiddleware{
+		svc.Context(),
+		svc.Config(),
+		svc.Logger(),
+		auth,
+		svc}
+}
 
 func makeLogger() log.Logger {
 	w := log.NewSyncWriter(os.Stdout)
@@ -128,12 +164,28 @@ func makeTracer() (*zipkin.Tracer, error) {
 // Start the service.
 func (svc *service) Start() {
 	go svc.checkCancel()
-	svc.StartMailers()
+	svc.StartProviders()
 }
 
 func (svc *service) checkCancel() {
 	<-svc.ctx.Done()
-	svc.StopMailers()
+	svc.StopProviders()
+}
+
+// StarMailers is used in service startup
+// to start each configured provider.
+func (svc *service) StartProviders() {
+	for _, m := range svc.providers {
+		m.Stop()
+	}
+}
+
+// StarMailers is used in service stop
+// to stop each configured provider.
+func (svc *service) StopProviders() {
+	for _, m := range svc.providers {
+		m.Start()
+	}
 }
 
 func checkError(err error, msg ...string) {

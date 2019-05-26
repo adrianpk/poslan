@@ -27,45 +27,19 @@ var (
 )
 
 // Load is a generic config loader.
-func Load() (*Config, error) {
-	return loadDefault()
+func Load(l log.Logger) (*Config, error) {
+	logger = l
+	// return loadDefault()
 	// return loadFromSecretsPath()
-	// return loadFromEnvvar()
+	return loadFromEnvvar()
 
-}
-
-// loadDefault gets efault values
-func loadDefault() (*Config, error) {
-	cfg := Config{}
-
-	// App
-	cfg.App.ServerPort = 8080
-	cfg.App.LogLevel = LogLevel.Debug
-
-	// Providers
-	// Provider 1
-	amazon := ProviderConfig{Name: "amazon"}
-	// Provider 2
-	sendgrid := ProviderConfig{Name: "sendgrid"}
-	// Mock provider 1
-	mockone := ProviderConfig{Name: "mockone", TestOnly: true}
-	// Mock provider 2
-	mocktwo := ProviderConfig{Name: "mocktwo", TestOnly: true}
-
-	// Mail
-	cfg.Mailers.Providers[0] = amazon
-	cfg.Mailers.Providers[1] = sendgrid
-	cfg.Mailers.Providers[2] = mockone
-	cfg.Mailers.Providers[3] = mocktwo
-
-	return &cfg, nil
 }
 
 // loadFromEnvvar - Load from envvars.
 // TODO: Default values must be corrected after establishing the appropriate ones.
 func loadFromEnvvar() (*Config, error) {
 	// App
-	appServerPort, _ := strconv.Atoi(GetEnvOrDef("POSLAN_SERVER_PORT", "6379"))
+	appServerPort, _ := strconv.Atoi(GetEnvOrDef("POSLAN_SERVER_PORT", "8080"))
 	appLogLevel := GetEnvOrDef("POSLAN_LOG_LEVEL", "debug")
 	providers := loadProvidersFromEnvars()
 
@@ -83,38 +57,39 @@ func loadFromEnvvar() (*Config, error) {
 		Mailers: mailers,
 	}
 
-	// fmt.Printf("[DEBUG] - Config: %+v", cfg)
-
 	return cfg, nil
 }
 
 func loadProvidersFromEnvars() []ProviderConfig {
 	// Nº max providers
-	n := 4
+	n := 2
 	// Providers envvar value prefixes
 	pfxs := []string{"PROVIDER_NAME", "PROVIDER_TYPE", "PROVIDER_ENABLED", "PROVIDER_TESTONLY"}
-	envall := composeName(pfxs, n)
+	envall := composeName(pfxs, n) // PROVIDER_NAME_1, PROVIDER_TYPE_1... PROVIDER_TESTONLY_2
 
 	ps := make([]ProviderConfig, len(pfxs))
 
-	for i, s := range envall {
-		nm := GetEnvOrDef(s[i], "") // Name
+	for _, s := range envall {
+
+		nm := GetEnvOrDef(s[0], "") // Name
 		tp := GetEnvOrDef(s[1], "") // Type
 
 		if nm != "" && tp != "" {
 
-			en := GetEnvOrDef(s[2], "false")                      // Enabled
-			ts, _ := strconv.ParseBool(GetEnvOrDef(s[3], "true")) // TestOnly
+			en, _ := strconv.ParseBool(GetEnvOrDef(s[2], "true"))  // Enabled
+			ts, _ := strconv.ParseBool(GetEnvOrDef(s[3], "false")) // TestOnly
 
 			p := ProviderConfig{
 				Name:     nm,
-				Type:     en,
-				Enabled:  tp,
+				Type:     tp,
+				Enabled:  en,
 				TestOnly: ts,
 			}
+
 			ps = append(ps, p)
 		}
 	}
+
 	return ps
 }
 
@@ -137,6 +112,7 @@ func loadFromSecretsPath() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	// logger.Log("level", LogLevel.Debug, "message", "Config", "file", cfg)
 	return cfg, nil
 }
@@ -152,23 +128,44 @@ func loadFromFile(filePath string) (*Config, error) {
 	err = yaml.Unmarshal(fileBytes, &cfg)
 	if err != nil {
 		return nil, err
+
 	}
 	// logger.Log("level", LogLevel.Debug, "message", "Config", "file", cfg)
 	return cfg, nil
+}
+
+// loadDefault gets efault values
+func loadDefault() (*Config, error) {
+	cfg := Config{}
+
+	// App
+	cfg.App.ServerPort = 8080
+	cfg.App.LogLevel = LogLevel.Debug
+
+	// Providers
+	// Provider 1
+	amazon := ProviderConfig{Name: "amazon"}
+	// Provider 2
+	sendgrid := ProviderConfig{Name: "sendgrid"}
+
+	// Mail
+	cfg.Mailers.Providers[0] = amazon
+	cfg.Mailers.Providers[1] = sendgrid
+
+	return &cfg, nil
 }
 
 // composeName compose prefixes with a range of indexes.
 // Given a set of prefixes and n it creates slice of string slices
 // including all possible permutations of prefixes and indices from 1 to n.
 func composeName(envvarPrefixes []string, n int) [][]string {
-	mxvars := len(envvarPrefixes)
-	envall := make([][]string, n)
+	envall := make([][]string, 0)
 
 	for i := 1; i <= n; i++ {
-		envsl := make([]string, mxvars)
+		envsl := make([]string, 0)
 
-		for j, p := range envvarPrefixes {
-			v := fmt.Sprintf("%s_%d", p[j], i)
+		for _, ev := range envvarPrefixes {
+			v := fmt.Sprintf("%s_%d", ev, i)
 			envsl = append(envsl, v)
 		}
 

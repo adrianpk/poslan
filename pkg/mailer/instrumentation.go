@@ -1,17 +1,21 @@
 package mailer
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	// "github.com/go-kit/kit/log"
-	"github.com/adrianpk/poslan/pkg/model"
+
+	"github.com/adrianpk/poslan/internal/config"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
 	"github.com/google/uuid"
 )
 
 type instrumentationMiddleware struct {
+	ctx            context.Context
+	cfg            *config.Config
 	logger         log.Logger
 	requestCount   metrics.Counter
 	requestLatency metrics.Histogram
@@ -20,7 +24,7 @@ type instrumentationMiddleware struct {
 }
 
 // SignIn is an instrumentation middleware wrapper over another interface implementation of SignIn.
-func (mw instrumentationMiddleware) SignIn(username, password string) (output *model.User, err error) {
+func (mw instrumentationMiddleware) SignIn(username, password string) (output string, err error) {
 	defer func(begin time.Time) {
 		lvs := []string{"method", "SignIn", "error", fmt.Sprint(err != nil)}
 		mw.requestCount.With(lvs...).Add(1)
@@ -52,6 +56,17 @@ func (mw instrumentationMiddleware) Send(to, cc, bcc, subject, body string) (err
 	return mw.next.Send(to, cc, bcc, subject, body)
 }
 
+// Config returns service context.
+func (mw instrumentationMiddleware) Context() context.Context {
+	return mw.ctx
+}
+
+// Config returns service config.
+func (mw instrumentationMiddleware) Config() *config.Config {
+	return mw.cfg
+}
+
+// Config returns service logger.
 func (mw instrumentationMiddleware) Logger() log.Logger {
 	return mw.logger
 }

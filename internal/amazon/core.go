@@ -22,18 +22,25 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 )
 
+// SESProvider is an Amazon SES delivery provider.
+type SESProvider struct {
+	ctx    context.Context
+	cfg    *config.Config
+	logger log.Logger
+	client *ses.SES
+}
+
 // Init amazon SES mail server handler.
-func Init(ctx context.Context, cfg *config.Config, log log.Logger) (*Mailer, error) {
-	// Initialize a new mailer.
-	return newMailer(ctx, cfg, log)
+func Init(ctx context.Context, cfg *config.Config, log log.Logger) (*SESProvider, error) {
+	return newProvider(ctx, cfg, log)
 }
 
 // Send an email.
-func (m *Mailer) Send(em model.Email) (resend bool, err error) {
+func (p *SESProvider) Send(em model.Email) (resend bool, err error) {
 
 	email := newSESEmail(em.From, em.To, em.CC, em.BCC, em.Subject, em.Body, em.Charset)
 
-	result, err := m.client.SendEmail(email)
+	result, err := p.client.SendEmail(email)
 
 	// Actually, all error cases are solved in the same way.
 	// In case that, eventually, it is not required to modify
@@ -63,15 +70,12 @@ func (m *Mailer) Send(em model.Email) (resend bool, err error) {
 				// Default condition for SES related errors.
 				return true, fmt.Errorf("cannot send the email: %s", err.Error())
 			}
-		} else {
-			// Default condition for SES non codified errors.
-			return true, fmt.Errorf("cannot send the email: %s", err.Error())
 		}
-		// Default condition for non SES codified errors.
+		// Default condition for SES non codified errors.
 		return true, fmt.Errorf("cannot send the email: %s", err.Error())
 	}
 
-	m.logger.Log(
+	p.logger.Log(
 		"level", config.LogLevel.Info,
 		"package", "amazon",
 		"method", "Send",
@@ -113,7 +117,7 @@ func newSESEmail(from, to, cc, bcc, subject, body, charset string) *ses.SendEmai
 	return email
 }
 
-func newMailer(ctx context.Context, cfg *config.Config, logger log.Logger) (*Mailer, error) {
+func newProvider(ctx context.Context, cfg *config.Config, logger log.Logger) (*SESProvider, error) {
 	// Create a new session in the us-west-2 region.
 	// Replace us-west-2 with the AWS Region you're using for Amazon SES.
 	sess, err := session.NewSession(&aws.Config{
@@ -127,7 +131,7 @@ func newMailer(ctx context.Context, cfg *config.Config, logger log.Logger) (*Mai
 	// Create a SES session.
 	clt := ses.New(sess)
 
-	return &Mailer{
+	return &SESProvider{
 		ctx:    ctx,
 		cfg:    cfg,
 		logger: logger,
@@ -136,16 +140,21 @@ func newMailer(ctx context.Context, cfg *config.Config, logger log.Logger) (*Mai
 }
 
 // Start the mailer.
-func (m *Mailer) Start() error {
+func (p *SESProvider) Start() error {
 	return nil
 }
 
 // Stop the mailers.
-func (m *Mailer) Stop() error {
+func (p *SESProvider) Stop() error {
 	return nil
 }
 
 // IsReady return true if mailer is ready.
-func (m *Mailer) IsReady() bool {
+func (p *SESProvider) IsReady() bool {
 	return true
+}
+
+// Client get the provider client.
+func (p *SESProvider) Client() interface{} {
+	return p.client
 }
