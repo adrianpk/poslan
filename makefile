@@ -4,6 +4,10 @@ PROD_TAG=v0.0.1
 IMAGE_NAME=poslan
 # Accounts
 DOCKERHUB_USER=adrianpksw
+# GKE
+CLUSTER_STAGE=stage
+REGION=europe-west1
+PROJECT=adrianpksw-stage
 # Go
 MAKE_CMD=make
 # Go
@@ -65,7 +69,7 @@ deps:
 	$(GO_GET) -u honnef.co/go/tools
 	$(GO_GET) -u github.com/dgrijalva/jwt-go
 	$(GO_GET) -u github.com/go-kit/kit/auth/jwt
-	$(GO_GET) -u github.com/heptiolabs/healthcheck
+	$(GO_GET) -u github.com/heptiolabs/healthcheckSTAGE
 
 build-stage:
 	$(MAKE_CMD) build
@@ -73,4 +77,24 @@ build-stage:
 	$(DOCKER_BUILD) -t $(DOCKERHUB_USER)/$(IMAGE_NAME):$(STAGE_TAG) .
 	$(DOCKER_PUSH) $(DOCKERHUB_USER)/$(IMAGE_NAME):$(STAGE_TAG)
 
+connect-stage:
+	$(GCLOUD_CMD) beta container clusters get-credentials $(CLUSTER_STAGE) --region $(REGION) --project $(PROJECT)
 
+update-secrets-stage:
+	# Only servert port and debug level for now.
+	$(KUBECTL_CMD) delete secret poslan-envvars
+	$(KUBECTL_CMD) create secret generic poslan-envvars --from-file=configs/staging/envvar/poslan_server_port.txt -from-file=configs/staging/envvar/poslan_log_level.txt
+
+install-stage:
+	$(MAKE_CMD) connect-stage
+	$(HELM_INSTALL) --name $(IMAGE_NAME) -f ./deployments/helm/values-$(STAGE_TAG).yaml ./deployments/hel
+
+delete-stage:
+	$(MAKE_CMD) connect-stage
+	$(HELM_DEL) --purge $(IMAGE_NAME)
+
+deploy-stage:
+	$(MAKE_CMD) build-stage
+	$(MAKE_CMD) connect-stage
+	$(MAKE_CMD) delete-state
+	$(HELM_INSTALL) --replace --name $(IMAGE_NAME) -f ./deployments/helm/values-$(STAGE_TAG).yaml ./deployments/hel
