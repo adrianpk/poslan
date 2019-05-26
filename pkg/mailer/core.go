@@ -69,8 +69,8 @@ func (svc *service) Init() (s Service, err error) {
 
 	s = addLogging(svc, svc.logger)
 	// s = addTracing(svc)
-	s = addInstrumentation(svc)
-	// s = addAuthentication(svc)
+	s = addInstrumentation(svc, svc.logger)
+	s = addAuthentication(svc, svc.logger)
 
 	return s, nil
 }
@@ -102,7 +102,9 @@ func initAmazon(svc *service) chan bool {
 // Middleware
 func addLogging(svc Service, logger log.Logger) Service {
 	if loggingOn {
-		return loggingMiddleware{logger: logger, next: svc}
+		return loggingMiddleware{
+			logger: logger,
+			next:   svc}
 	}
 	return svc
 }
@@ -120,29 +122,25 @@ func addLogging(svc Service, logger log.Logger) Service {
 // 	return svc
 // }
 
-func addInstrumentation(svc Service) Service {
+func addInstrumentation(svc Service, logger log.Logger) Service {
 	if instrumentationOn {
 		m := instrumentationMeters()
 		return instrumentationMiddleware{
-			svc.Context(),
-			svc.Config(),
-			svc.Logger(),
-			m.ReqCount,
-			m.ReqLatency,
-			m.CountResult,
-			svc}
+			logger:         logger,
+			requestCount:   m.ReqCount,
+			requestLatency: m.ReqLatency,
+			countResult:    m.CountResult,
+			next:           svc}
 	}
 	return svc
 }
 
-func addAuthentication(svc Service) Service {
-	auth := auth.Server{}
+func addAuthentication(svc Service, logger log.Logger) Service {
+	auth := auth.Server{Logger: logger}
 	return authenticationMiddleware{
-		svc.Context(),
-		svc.Config(),
-		svc.Logger(),
-		auth,
-		svc}
+		logger: svc.Logger(),
+		auth:   auth,
+		next:   svc}
 }
 
 func makeLogger() log.Logger {

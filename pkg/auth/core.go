@@ -27,7 +27,7 @@ type SecServer interface {
 type Server struct {
 	ctx      context.Context
 	cfg      *config.Config
-	logger   log.Logger
+	Logger   log.Logger
 	key      []byte
 	clientDB map[string]string
 	usersDB  map[string]*model.User
@@ -53,7 +53,7 @@ func generateToken(signingKey []byte, clientID string) (string, error) {
 // Authenticate a user.
 func (s Server) Authenticate(clientID string, clientSecret string) (string, error) {
 	if s.validSecret(clientID, clientSecret) {
-		signed, err := generateToken(s.key, clientID)
+		signed, err := generateToken(s.signingKey(), clientID)
 		if err != nil {
 			return "", errors.New("token generation error")
 		}
@@ -66,7 +66,6 @@ func (s Server) Authenticate(clientID string, clientSecret string) (string, erro
 func (s Server) ValidateToken(token string) error {
 
 	t, err := jwt.Parse(token, s.Keys())
-	//(*jwt.Token, error)
 
 	if t.Valid {
 		return nil
@@ -76,34 +75,28 @@ func (s Server) ValidateToken(token string) error {
 
 		if v.Errors&jwt.ValidationErrorMalformed != 0 {
 			// Token malformed
+			s.Logger.Log("Msg 1", err.Error())
 			return err
 
 		} else if v.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
 			// Token expired
+			s.Logger.Log("Msg 2", err.Error())
 			return err
 
 		} else {
 			// Other possible error
+			s.Logger.Log("Msg 3", err.Error())
 			return err
 		}
 	}
-
+	s.Logger.Log("Msg 4", err.Error())
 	return errors.New("invalid token")
 }
 
 // Keys returns a function used to generate the signing keys.
 func (s Server) Keys() func(token *jwt.Token) (interface{}, error) {
-	// signingkey: This a PoC.
-	// For a production ready app use something like this to generate the keys
-	// ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key
-	// openssl rsa -in jwtRS256.key -pubout -outform PEM -out jwtRS256.key.pub
-	// cat jwtRS256.key
-	// cat jwtRS256.key.pub
-	// And of course get it from another place (i.e.: Hashicorp Vault)
-	signingkey := []byte("55a124b9")
-
 	return func(token *jwt.Token) (interface{}, error) {
-		return signingkey, nil
+		return s.signingKey(), nil
 	}
 }
 
@@ -139,6 +132,17 @@ func (s Server) users() map[string]*model.User {
 	return s.usersDB
 }
 
+func (s Server) signingKey() []byte {
+	// signingkey: This a PoC.
+	// For a production ready app use something like this to generate the keys
+	// ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key
+	// openssl rsa -in jwtRS256.key -pubout -outform PEM -out jwtRS256.key.pub
+	// cat jwtRS256.key
+	// cat jwtRS256.key.pub
+	// And of course get it from another place (i.e.: Hashicorp Vault)
+	return []byte("55a124b9")
+}
+
 func (s Server) userBySecret(secret string) *model.User {
 	usersDB := s.users()
 	return usersDB[secret]
@@ -157,9 +161,4 @@ func (s Server) Context() context.Context {
 // Config returns service config.
 func (s *Server) Config() *config.Config {
 	return s.cfg
-}
-
-// Logger returns service logger.
-func (s *Server) Logger() log.Logger {
-	return s.logger
 }
