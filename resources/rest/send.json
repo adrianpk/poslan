@@ -1,0 +1,7 @@
+{
+  "to": "to@gmail.com",
+  "cc": "cc@gmail.com",
+  "bcc": "cc@gmail.com",
+  "subject": "Subject",
+  "body": "Mail body."
+}
