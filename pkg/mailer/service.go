@@ -36,13 +36,13 @@ func (s *service) SignIn(clientID, secret string) (string, error) {
 }
 
 // SignOut lets a user sign out.
-func (s *service) SignOut(id uuid.UUID) error {
+func (s *service) SignOut(id uuid.UUID, token string) error {
 	// TODO: Close session implementation.
 	return errors.New("not implemented")
 }
 
 // Send lets the user send a mail.
-func (s *service) Send(to, cc, bcc, subject, body string) error {
+func (s *service) Send(to, cc, bcc, subject, body, token string) error {
 	from := "fix:username" // TODO: Get from user in session data.
 	m := makeEmail(from, to, cc, bcc, subject, body)
 	s.logger.Log("message", fmt.Sprintf("%+v", m))

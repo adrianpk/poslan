@@ -34,22 +34,22 @@ func (mw authenticationMiddleware) SignIn(clientID, secret string) (output strin
 }
 
 // SignOut is a logging middleware wrapper over another interface implementation of SignOut.
-func (mw authenticationMiddleware) SignOut(id uuid.UUID) (err error) {
-	// err = mw.auth.ValidateToken(token)
-	// if err != nil {
-	// 	return err
-	// }
-	err = mw.next.SignOut(id)
+func (mw authenticationMiddleware) SignOut(id uuid.UUID, token string) (err error) {
+	err = mw.auth.ValidateToken(token)
+	if err != nil {
+		return err
+	}
+	err = mw.next.SignOut(id, token)
 	return
 }
 
 // Send is a logging middleware wrapper over another interface implementation of Send.
-func (mw authenticationMiddleware) Send(to, cc, bcc, subject, body string) (err error) {
-	// err = mw.auth.ValidateToken(token)
-	// if err != nil {
-	// 	return err
-	// }
-	err = mw.next.Send(to, cc, bcc, subject, body)
+func (mw authenticationMiddleware) Send(to, cc, bcc, subject, body, token string) (err error) {
+	err = mw.auth.ValidateToken(token)
+	if err != nil {
+		return err
+	}
+	err = mw.next.Send(to, cc, bcc, subject, token, body)
 	return
 }
 

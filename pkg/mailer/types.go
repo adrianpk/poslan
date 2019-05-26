@@ -30,7 +30,8 @@ type signInResponse struct {
 
 // Sign out
 type signOutRequest struct {
-	ID uuid.UUID `json:"id,omitempty"`
+	ID    uuid.UUID `json:"id,omitempty"`
+	Token string    `json:"token,omitempty"`
 }
 
 type signOutResponse struct {
@@ -44,6 +45,7 @@ type sendRequest struct {
 	Bcc     string `json:"bcc,omitempty"`
 	Subject string `json:"subject,omitempty"`
 	Body    string `json:"body,omitempty"`
+	Token   string `json:"token,omitempty"`
 }
 
 type sendResponse struct {

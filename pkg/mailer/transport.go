@@ -4,7 +4,9 @@ package mailer
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+	"strings"
 
 	c "github.com/adrianpk/poslan/internal/config"
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -83,21 +85,40 @@ func decodeSignInRequest(_ context.Context, r *http.Request) (interface{}, error
 
 func decodeSignOutRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var request signOutRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	token, err := readToken(r)
+	if err != nil {
 		return nil, err
 	}
+	if err = json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return nil, err
+	}
+	request.Token = token
 	return request, nil
 }
 
 func decodeSendRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var request sendRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	token, err := readToken(r)
+	if err != nil {
 		return nil, err
 	}
+	if err = json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return nil, err
+	}
+	request.Token = token
 	return request, nil
 }
 
 // Encoders
 func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	return json.NewEncoder(w).Encode(response)
+}
+
+func readToken(r *http.Request) (string, error) {
+	token := r.Header.Get("Authorization")
+	splitToken := strings.Split(token, "Bearer")
+	if len(splitToken) != 2 {
+		return "", errors.New("invalid token format")
+	}
+	return strings.TrimSpace(splitToken[1]), nil
 }

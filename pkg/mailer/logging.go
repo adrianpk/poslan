@@ -44,7 +44,7 @@ func (mw loggingMiddleware) SignIn(clientID, secret string) (output string, err 
 }
 
 // SignOut is a logging middleware wrapper over another interface implementation of SignOut.
-func (mw loggingMiddleware) SignOut(id uuid.UUID) (err error) {
+func (mw loggingMiddleware) SignOut(id uuid.UUID, token string) (err error) {
 	defer func(begin time.Time) {
 		input := fmt.Sprintf("{%s}", id.String())
 		mw.logger.Log(
@@ -56,12 +56,12 @@ func (mw loggingMiddleware) SignOut(id uuid.UUID) (err error) {
 		)
 	}(time.Now())
 
-	err = mw.next.SignOut(id)
+	err = mw.next.SignOut(id, token)
 	return
 }
 
 // Send is a logging middleware wrapper over another interface implementation of Send.
-func (mw loggingMiddleware) Send(to, cc, bcc, subject, body string) (err error) {
+func (mw loggingMiddleware) Send(to, cc, bcc, subject, body, token string) (err error) {
 	defer func(begin time.Time) {
 		input := fmt.Sprintf("{%s, %s, %s, %s}", to, cc, bcc, body)
 		mw.logger.Log(
@@ -73,7 +73,7 @@ func (mw loggingMiddleware) Send(to, cc, bcc, subject, body string) (err error) 
 		)
 	}(time.Now())
 
-	err = mw.next.Send(to, cc, bcc, subject, body)
+	err = mw.next.Send(to, cc, bcc, subject, body, token)
 	return
 }
 

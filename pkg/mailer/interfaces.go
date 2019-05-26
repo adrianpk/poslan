@@ -22,8 +22,8 @@ type Service interface {
 	Config() *config.Config
 	Logger() log.Logger
 	SignIn(clientID, secret string) (string, error)
-	SignOut(id uuid.UUID) error
-	Send(to, cc, bcc, subject, body string) error
+	SignOut(id uuid.UUID, token string) error
+	Send(to, cc, bcc, subject, body, token string) error
 }
 
 // Mailer interface

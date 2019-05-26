@@ -35,25 +35,25 @@ func (mw instrumentationMiddleware) SignIn(clientID, secret string) (output stri
 }
 
 // SignOut is an instrumentation middleware wrapper over another interface implementation of SignOut.
-func (mw instrumentationMiddleware) SignOut(id uuid.UUID) (err error) {
+func (mw instrumentationMiddleware) SignOut(id uuid.UUID, token string) (err error) {
 	defer func(begin time.Time) {
 		lvs := []string{"method", "SignOut", "error", fmt.Sprint(err != nil)}
 		mw.requestCount.With(lvs...).Add(1)
 		mw.requestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mw.next.SignOut(id)
+	return mw.next.SignOut(id, token)
 }
 
 // Send is an instrumentation middleware wrapper over another interface implementation of Send.
-func (mw instrumentationMiddleware) Send(to, cc, bcc, subject, body string) (err error) {
+func (mw instrumentationMiddleware) Send(to, cc, bcc, subject, body, token string) (err error) {
 	defer func(begin time.Time) {
 		lvs := []string{"method", "Send", "error", fmt.Sprint(err != nil)}
 		mw.requestCount.With(lvs...).Add(1)
 		mw.requestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mw.next.Send(to, cc, bcc, subject, body)
+	return mw.next.Send(to, cc, bcc, subject, body, token)
 }
 
 // Config returns service context.
