@@ -39,7 +39,7 @@ func Load(l log.Logger) (*Config, error) {
 // TODO: Default values must be corrected after establishing the appropriate ones.
 func loadFromEnvvar() (*Config, error) {
 	// App
-	appServerPort, _ := strconv.Atoi(GetEnvOrDef("POSLAN_SERVER_PORT", "6379"))
+	appServerPort, _ := strconv.Atoi(GetEnvOrDef("POSLAN_SERVER_PORT", "8080"))
 	appLogLevel := GetEnvOrDef("POSLAN_LOG_LEVEL", "debug")
 	providers := loadProvidersFromEnvars()
 
