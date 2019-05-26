@@ -26,12 +26,19 @@ func (ac *AppConfig) ServerPortFmt() string {
 	return fmt.Sprintf(":%d", ac.ServerPort)
 }
 
+// SenderConfig stores email sender config.
+type SenderConfig struct {
+	Name  string `yaml:"name"`
+	Email string `yaml:"email"`
+}
+
 // ProviderConfig stores mail service provider configurations
 type ProviderConfig struct {
-	Name     string `yaml:"name"`
-	Type     string `yaml:"type"`
-	Enabled  bool   `yaml:"enabled"`
-	TestOnly bool   `yaml:"test"`
+	Name     string       `yaml:"name"`
+	Type     string       `yaml:"type"`
+	Enabled  bool         `yaml:"enabled"`
+	TestOnly bool         `yaml:"test"`
+	Sender   SenderConfig `yaml:"sender"`
 }
 
 // LogLevel enumerates service log level.

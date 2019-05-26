@@ -24,6 +24,7 @@ type User struct {
 // for to, cc, and bcc fields
 type Email struct {
 	ID      uuid.UUID
+	Name    string
 	From    string
 	To      string
 	CC      string

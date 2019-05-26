@@ -49,8 +49,11 @@ func (s *service) SignOut(ctx context.Context, id uuid.UUID) error {
 
 // Send lets the user send a mail.
 func (s *service) Send(ctx context.Context, to, cc, bcc, subject, body string) error {
-	from := "fix:username" // TODO: Get from user in session data.
-	m := makeEmail(from, to, cc, bcc, subject, body)
+
+	fromName := s.Config().Mailers.Providers[0].Name
+	fromEmail := s.Config().Mailers.Providers[0].Name
+
+	m := makeEmail(fromName, fromEmail, to, cc, bcc, subject, body)
 	s.logger.Log("message", fmt.Sprintf("%+v", m))
 
 	return errors.New("not implemented")
@@ -78,9 +81,10 @@ func (s *service) Logger() log.Logger {
 }
 
 // Utility functions
-func makeEmail(from, to, cc, bcc, subject, body string) *model.Email {
+func makeEmail(name, from, to, cc, bcc, subject, body string) *model.Email {
 	return &model.Email{
 		ID:      uuid.New(),
+		Name:    name,
 		From:    from,
 		To:      to,
 		CC:      cc,

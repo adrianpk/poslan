@@ -64,8 +64,8 @@ func loadProvidersFromEnvars() []ProviderConfig {
 	// Nº max providers
 	n := 2
 	// Providers envvar value prefixes
-	pfxs := []string{"PROVIDER_NAME", "PROVIDER_TYPE", "PROVIDER_ENABLED", "PROVIDER_TESTONLY"}
-	envall := composeName(pfxs, n) // PROVIDER_NAME_1, PROVIDER_TYPE_1... PROVIDER_TESTONLY_2
+	pfxs := []string{"PROVIDER_NAME", "PROVIDER_TYPE", "PROVIDER_ENABLED", "PROVIDER_TESTONLY", "PROVIDER_SENDER_NAME", "PROVIDER_SENDER_EMAIL"}
+	envall := composeName(pfxs, n) // PROVIDER_NAME_1, PROVIDER_TYPE_1... PROVIDER_SENDER_EMAIL_2
 
 	ps := make([]ProviderConfig, len(pfxs))
 
@@ -78,12 +78,18 @@ func loadProvidersFromEnvars() []ProviderConfig {
 
 			en, _ := strconv.ParseBool(GetEnvOrDef(s[2], "true"))  // Enabled
 			ts, _ := strconv.ParseBool(GetEnvOrDef(s[3], "false")) // TestOnly
+			sn := GetEnvOrDef(s[0], "")                            // Sender name
+			se := GetEnvOrDef(s[1], "")                            // Sender email
 
 			p := ProviderConfig{
 				Name:     nm,
 				Type:     tp,
 				Enabled:  en,
 				TestOnly: ts,
+				Sender: SenderConfig{
+					Name:  sn,
+					Email: se,
+				},
 			}
 
 			ps = append(ps, p)

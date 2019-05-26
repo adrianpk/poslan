@@ -33,6 +33,10 @@ deployment:
         value: "true"
       - name: PROVIDER_TESTONLY_1
         value: "false"
+      - name: PROVIDER_SENDER_NAME_1
+        value: "SendMailTest"
+      - name: PROVIDER_SENDER_EMAIL_1
+        value: "sendmailtest@sharkslasers.com"
       - name: PROVIDER_NAME_2
         value: "sendgrid"
       - name: PROVIDER_TYPE_2
@@ -41,3 +45,7 @@ deployment:
         value: "true"
       - name: PROVIDER_TESTONLY_2
         value: "false"
+      - name: PROVIDER_SENDER_NAME_2
+        value: "SendMailTest"
+      - name: PROVIDER_SENDER_EMAIL_2
+        value: "sendmailtest@sharkslasers.com"
