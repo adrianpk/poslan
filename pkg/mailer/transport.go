@@ -118,6 +118,7 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 	return json.NewEncoder(w).Encode(response)
 }
 
+// tokenToContext read bearer token from request header.
 func readToken(r *http.Request) (string, error) {
 	token := r.Header.Get("Authorization")
 	splitToken := strings.Split(token, "Bearer")
@@ -127,6 +128,8 @@ func readToken(r *http.Request) (string, error) {
 	return strings.TrimSpace(splitToken[1]), nil
 }
 
+// tokenToContext extracts bearer token from request header and stores it
+// in context.
 func tokenToContext(ctx context.Context, r *http.Request) context.Context {
 	token := r.Header.Get("Authorization")
 	token, err := readToken(r)
