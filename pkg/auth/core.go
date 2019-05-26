@@ -8,6 +8,7 @@ import (
 	"github.com/go-kit/kit/log"
 
 	"github.com/adrianpk/poslan/internal/config"
+	"github.com/adrianpk/poslan/pkg/model"
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
@@ -27,6 +28,7 @@ type Server struct {
 	logger   log.Logger
 	key      []byte
 	clientDB map[string]string
+	usersDB  map[string]*model.User
 }
 
 type customClaims struct {
@@ -64,14 +66,40 @@ func (s Server) Authenticate(clientID string, clientSecret string) (string, erro
 // Clients map a client with its assigned secret.
 func (s Server) clients() map[string]string {
 	s.clientDB = make(map[string]string)
-	s.clientDB["clt1"] = "52b3d83e"
-	s.clientDB["clt2"] = "1580c230"
+	s.clientDB["dd74cb9cfb5a4f1cac4d"] = "a5ee54c8a21a4c61820f88f14c30fa5b"
+	s.clientDB["984fd4bdcb374aa7836a"] = "98d28599e5554a9ea4ada53feae924ff"
 	return s.clientDB
 }
 
 func (s Server) validSecret(clientID, secret string) (valid bool) {
 	clientsDB := s.clients()
 	return clientsDB[clientID] == secret
+}
+
+// This is a PoC, in a real world implementation
+// this user database would be supported by
+// some persistence mechanism.
+func (s Server) users() map[string]*model.User {
+	s.usersDB = make(map[string]*model.User)
+	s.usersDB["a5ee54c8a21a4c61820f88f14c30fa5b"] = &model.User{
+		Username: "Diana Prince",
+		Password: "3ae61c5e5af2276ee452237e573a8cf",
+	}
+	s.usersDB["98d28599e5554a9ea4ada53feae924ff"] = &model.User{
+		Username: "Clark Kent",
+		Password: "64cd0e8b4a00b7d22f40b124413ad16d",
+	}
+	return s.usersDB
+}
+
+func (s Server) userBySecret(secret string) *model.User {
+	usersDB := s.users()
+	return usersDB[secret]
+}
+
+func (s Server) user(secret string) *model.User {
+	usersDB := s.users()
+	return usersDB[secret]
 }
 
 // Context returns service context.
