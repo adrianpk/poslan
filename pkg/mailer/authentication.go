@@ -27,11 +27,7 @@ type authenticationMiddleware struct {
 
 // SignIn is a logging middleware wrapper over another interface implementation of SignIn.
 func (mw authenticationMiddleware) SignIn(ctx context.Context, clientID, secret string) (output string, err error) {
-	output, err = mw.auth.Authenticate(clientID, secret)
-	if err != nil {
-		return "", err
-	}
-	return output, nil
+	return mw.next.SignIn(ctx, clientID, secret)
 }
 
 // SignOut is a logging middleware wrapper over another interface implementation of SignOut.

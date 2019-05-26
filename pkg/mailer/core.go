@@ -47,6 +47,7 @@ func makeService(ctx context.Context, cfg *c.Config, log log.Logger) *service {
 		ctx:    ctx,
 		cfg:    cfg,
 		logger: log,
+		auth:   auth.Server{Logger: log},
 	}
 }
 
@@ -70,7 +71,7 @@ func (svc *service) Init() (s Service, err error) {
 	s = addLogging(svc, svc.logger)
 	// s = addTracing(svc)
 	s = addInstrumentation(svc, svc.logger)
-	s = addAuthentication(svc, svc.logger)
+	s = addAuthentication(svc, svc.logger, svc.auth)
 
 	return s, nil
 }
@@ -130,17 +131,18 @@ func addInstrumentation(svc Service, logger log.Logger) Service {
 			requestCount:   m.ReqCount,
 			requestLatency: m.ReqLatency,
 			countResult:    m.CountResult,
-			next:           svc}
+			next:           svc,
+		}
 	}
 	return svc
 }
 
-func addAuthentication(svc Service, logger log.Logger) Service {
-	auth := auth.Server{Logger: logger}
+func addAuthentication(svc Service, logger log.Logger, auth auth.SecServer) Service {
 	return authenticationMiddleware{
 		logger: svc.Logger(),
 		auth:   auth,
-		next:   svc}
+		next:   svc,
+	}
 }
 
 func makeLogger() log.Logger {

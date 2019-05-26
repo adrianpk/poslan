@@ -15,6 +15,7 @@ import (
 
 	"github.com/adrianpk/poslan/internal/config"
 	"github.com/adrianpk/poslan/internal/sys"
+	"github.com/adrianpk/poslan/pkg/auth"
 	"github.com/adrianpk/poslan/pkg/model"
 	"github.com/go-kit/kit/log"
 	"github.com/google/uuid"
@@ -27,12 +28,17 @@ type service struct {
 	ctx       context.Context
 	cfg       *config.Config
 	logger    log.Logger
+	auth      auth.SecServer
 	providers []sys.Provider
 }
 
 // SignIn lets a user sign in providing username and password.
 func (s *service) SignIn(ctx context.Context, clientID, secret string) (string, error) {
-	return "", errors.New("not implemented")
+	output, err := s.auth.Authenticate(clientID, secret)
+	if err != nil {
+		return "", err
+	}
+	return output, nil
 }
 
 // SignOut lets a user sign out.
