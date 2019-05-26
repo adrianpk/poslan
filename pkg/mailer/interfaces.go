@@ -21,9 +21,9 @@ type Service interface {
 	Context() context.Context
 	Config() *config.Config
 	Logger() log.Logger
-	SignIn(clientID, secret string) (string, error)
-	SignOut(id uuid.UUID, token string) error
-	Send(to, cc, bcc, subject, body, token string) error
+	SignIn(ctx context.Context, clientID, secret string) (string, error)
+	SignOut(ctx context.Context, id uuid.UUID) error
+	Send(ctx context.Context, to, cc, bcc, subject, body string) error
 }
 
 // Mailer interface

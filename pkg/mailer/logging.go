@@ -26,7 +26,7 @@ type loggingMiddleware struct {
 }
 
 // SignIn is a logging middleware wrapper over another interface implementation of SignIn.
-func (mw loggingMiddleware) SignIn(clientID, secret string) (output string, err error) {
+func (mw loggingMiddleware) SignIn(ctx context.Context, clientID, secret string) (output string, err error) {
 	defer func(begin time.Time) {
 		input := fmt.Sprintf("{%s, %s}", clientID, secret)
 		mw.logger.Log(
@@ -39,12 +39,12 @@ func (mw loggingMiddleware) SignIn(clientID, secret string) (output string, err 
 		)
 	}(time.Now())
 
-	output, err = mw.next.SignIn(clientID, secret)
+	output, err = mw.next.SignIn(ctx, clientID, secret)
 	return
 }
 
 // SignOut is a logging middleware wrapper over another interface implementation of SignOut.
-func (mw loggingMiddleware) SignOut(id uuid.UUID, token string) (err error) {
+func (mw loggingMiddleware) SignOut(ctx context.Context, id uuid.UUID) (err error) {
 	defer func(begin time.Time) {
 		input := fmt.Sprintf("{%s}", id.String())
 		mw.logger.Log(
@@ -56,12 +56,12 @@ func (mw loggingMiddleware) SignOut(id uuid.UUID, token string) (err error) {
 		)
 	}(time.Now())
 
-	err = mw.next.SignOut(id, token)
+	err = mw.next.SignOut(ctx, id)
 	return
 }
 
 // Send is a logging middleware wrapper over another interface implementation of Send.
-func (mw loggingMiddleware) Send(to, cc, bcc, subject, body, token string) (err error) {
+func (mw loggingMiddleware) Send(ctx context.Context, to, cc, bcc, subject, body string) (err error) {
 	defer func(begin time.Time) {
 		input := fmt.Sprintf("{%s, %s, %s, %s}", to, cc, bcc, body)
 		mw.logger.Log(
@@ -73,7 +73,7 @@ func (mw loggingMiddleware) Send(to, cc, bcc, subject, body, token string) (err 
 		)
 	}(time.Now())
 
-	err = mw.next.Send(to, cc, bcc, subject, body, token)
+	err = mw.next.Send(ctx, to, cc, bcc, subject, body)
 	return
 }
 

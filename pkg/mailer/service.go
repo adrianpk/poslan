@@ -31,18 +31,18 @@ type service struct {
 }
 
 // SignIn lets a user sign in providing username and password.
-func (s *service) SignIn(clientID, secret string) (string, error) {
+func (s *service) SignIn(ctx context.Context, clientID, secret string) (string, error) {
 	return "", errors.New("not implemented")
 }
 
 // SignOut lets a user sign out.
-func (s *service) SignOut(id uuid.UUID, token string) error {
+func (s *service) SignOut(ctx context.Context, id uuid.UUID) error {
 	// TODO: Close session implementation.
 	return errors.New("not implemented")
 }
 
 // Send lets the user send a mail.
-func (s *service) Send(to, cc, bcc, subject, body, token string) error {
+func (s *service) Send(ctx context.Context, to, cc, bcc, subject, body string) error {
 	from := "fix:username" // TODO: Get from user in session data.
 	m := makeEmail(from, to, cc, bcc, subject, body)
 	s.logger.Log("message", fmt.Sprintf("%+v", m))

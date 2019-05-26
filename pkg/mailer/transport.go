@@ -19,6 +19,10 @@ const (
 	transactionOn     = true
 )
 
+var (
+	authTokenCtxKey = contextKey("auth-token")
+)
+
 // Run the mailer service.
 func Run() {
 
@@ -58,24 +62,28 @@ func SignInHandler(svc Service) *httptransport.Server {
 
 // SignOutHandler manages signout up process.
 func SignOutHandler(svc Service) *httptransport.Server {
+	opts := httptransport.ServerBefore(tokenToContext)
 	return httptransport.NewServer(
 		makeSignOutEndpoint(svc),
 		decodeSignOutRequest,
 		encodeResponse,
+		opts,
 	)
 }
 
 // SendHandler manages email sending.
 func SendHandler(svc Service) *httptransport.Server {
+	opts := httptransport.ServerBefore(tokenToContext)
 	return httptransport.NewServer(
 		makeSendEndpoint(svc),
 		decodeSendRequest,
 		encodeResponse,
+		opts,
 	)
 }
 
 // Decoders
-func decodeSignInRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeSignInRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	var request signInRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return nil, err
@@ -83,29 +91,25 @@ func decodeSignInRequest(_ context.Context, r *http.Request) (interface{}, error
 	return request, nil
 }
 
-func decodeSignOutRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeSignOutRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	var request signOutRequest
-	token, err := readToken(r)
-	if err != nil {
+	tokenToContext(ctx, r)
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return nil, err
 	}
-	if err = json.NewDecoder(r.Body).Decode(&request); err != nil {
-		return nil, err
-	}
-	request.Token = token
+
 	return request, nil
 }
 
-func decodeSendRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeSendRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	var request sendRequest
-	token, err := readToken(r)
-	if err != nil {
+	tokenToContext(ctx, r)
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return nil, err
 	}
-	if err = json.NewDecoder(r.Body).Decode(&request); err != nil {
-		return nil, err
-	}
-	request.Token = token
+
 	return request, nil
 }
 
@@ -121,4 +125,13 @@ func readToken(r *http.Request) (string, error) {
 		return "", errors.New("invalid token format")
 	}
 	return strings.TrimSpace(splitToken[1]), nil
+}
+
+func tokenToContext(ctx context.Context, r *http.Request) context.Context {
+	token := r.Header.Get("Authorization")
+	token, err := readToken(r)
+	if err != nil {
+		return ctx
+	}
+	return context.WithValue(ctx, authTokenCtxKey, token)
 }
