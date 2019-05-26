@@ -6,7 +6,9 @@ PORT="8080"
 PATH="signin"
 
 # Pre
-# Curl installed using nix not found if path not appropriately set
+# Curl and jq installed using nix not found if path not appropriately set
+# Uncomment these helper lines or replace '/usr/bin/curl' by your system values
+# if curl is not included in you PATH.
 # curlcmd="$(which curl)"
 # alias curl=$curlcmd
 

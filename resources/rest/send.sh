@@ -8,9 +8,11 @@ TOKEN=$(/usr/bin/curl -s -X POST -H 'Accept: application/json' -H 'Content-Type:
 
 # Pre
 # Curl and jq installed using nix not found if path not appropriately set
+# Uncomment these helper lines or replace '/usr/bin/curl' by your system values
+# if curl is not included in you PATH.
 # curlcmd="$(which curl)"
 # alias curl=$curlcmd
-# jqcmd="$(which curl)"
+# jqcmd="$(which jq)"
 # alias jq=$jqcmd
 
 post () {
