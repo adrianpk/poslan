@@ -25,8 +25,8 @@ type authenticationMiddleware struct {
 }
 
 // SignIn is a logging middleware wrapper over another interface implementation of SignIn.
-func (mw authenticationMiddleware) SignIn(username, password string) (output string, err error) {
-	output, err = mw.auth.Authenticate(username, password)
+func (mw authenticationMiddleware) SignIn(clientID, secret string) (output string, err error) {
+	output, err = mw.auth.Authenticate(clientID, secret)
 	if err != nil {
 		return "", err
 	}
@@ -35,12 +35,20 @@ func (mw authenticationMiddleware) SignIn(username, password string) (output str
 
 // SignOut is a logging middleware wrapper over another interface implementation of SignOut.
 func (mw authenticationMiddleware) SignOut(id uuid.UUID) (err error) {
+	// err = mw.auth.ValidateToken(token)
+	// if err != nil {
+	// 	return err
+	// }
 	err = mw.next.SignOut(id)
 	return
 }
 
 // Send is a logging middleware wrapper over another interface implementation of Send.
 func (mw authenticationMiddleware) Send(to, cc, bcc, subject, body string) (err error) {
+	// err = mw.auth.ValidateToken(token)
+	// if err != nil {
+	// 	return err
+	// }
 	err = mw.next.Send(to, cc, bcc, subject, body)
 	return
 }

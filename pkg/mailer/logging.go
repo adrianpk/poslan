@@ -26,9 +26,9 @@ type loggingMiddleware struct {
 }
 
 // SignIn is a logging middleware wrapper over another interface implementation of SignIn.
-func (mw loggingMiddleware) SignIn(username, password string) (output string, err error) {
+func (mw loggingMiddleware) SignIn(clientID, secret string) (output string, err error) {
 	defer func(begin time.Time) {
-		input := fmt.Sprintf("{%s, %s}", username, password)
+		input := fmt.Sprintf("{%s, %s}", clientID, secret)
 		mw.logger.Log(
 			"level", c.LogLevel.Info,
 			"method", "SignIn",
@@ -39,7 +39,7 @@ func (mw loggingMiddleware) SignIn(username, password string) (output string, er
 		)
 	}(time.Now())
 
-	output, err = mw.next.SignIn(username, password)
+	output, err = mw.next.SignIn(clientID, secret)
 	return
 }
 

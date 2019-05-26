@@ -31,7 +31,7 @@ type service struct {
 }
 
 // SignIn lets a user sign in providing username and password.
-func (s *service) SignIn(username, password string) (string, error) {
+func (s *service) SignIn(clientID, secret string) (string, error) {
 	return "", errors.New("not implemented")
 }
 

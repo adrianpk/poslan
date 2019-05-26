@@ -24,14 +24,14 @@ type instrumentationMiddleware struct {
 }
 
 // SignIn is an instrumentation middleware wrapper over another interface implementation of SignIn.
-func (mw instrumentationMiddleware) SignIn(username, password string) (output string, err error) {
+func (mw instrumentationMiddleware) SignIn(clientID, secret string) (output string, err error) {
 	defer func(begin time.Time) {
 		lvs := []string{"method", "SignIn", "error", fmt.Sprint(err != nil)}
 		mw.requestCount.With(lvs...).Add(1)
 		mw.requestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mw.next.SignIn(username, password)
+	return mw.next.SignIn(clientID, secret)
 }
 
 // SignOut is an instrumentation middleware wrapper over another interface implementation of SignOut.

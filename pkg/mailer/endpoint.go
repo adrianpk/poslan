@@ -22,7 +22,7 @@ func makeSignInEndpoint(svc Service) endpoint.Endpoint {
 		reqstr := fmt.Sprintf("Req: %+v", req)
 		svc.Logger().Log("level", c.LogLevel.Info, "req", reqstr)
 
-		user, err := svc.SignIn(req.Username, req.Password)
+		user, err := svc.SignIn(req.ClientID, req.Secret)
 		if err != nil {
 			return signInResponse{user, err.Error()}, nil
 		}

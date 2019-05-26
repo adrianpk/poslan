@@ -21,7 +21,7 @@ type Service interface {
 	Context() context.Context
 	Config() *config.Config
 	Logger() log.Logger
-	SignIn(username, password string) (string, error)
+	SignIn(clientID, secret string) (string, error)
 	SignOut(id uuid.UUID) error
 	Send(to, cc, bcc, subject, body string) error
 }
