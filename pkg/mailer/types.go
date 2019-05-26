@@ -12,8 +12,11 @@ import (
 	"github.com/google/uuid"
 )
 
-// Request & response
+// Handler is a mailer handler.
+type Handler struct {
+}
 
+// Request & response
 // Sign in
 type signInRequest struct {
 	Username string `json:"username"`
@@ -21,8 +24,8 @@ type signInRequest struct {
 }
 
 type signInResponse struct {
-	User *model.User `json:"user,omitempty"`
-	Err  string      `json:"error,omitempty"`
+	Token string `json:"token,omitempty"`
+	Err   string `json:"error,omitempty"`
 }
 
 // Sign out
