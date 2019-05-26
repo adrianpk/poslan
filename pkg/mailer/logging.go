@@ -8,22 +8,25 @@
 package mailer
 
 import (
+	"context"
 	"fmt"
 	"time"
 
+	"github.com/adrianpk/poslan/internal/config"
 	c "github.com/adrianpk/poslan/internal/config"
-	"github.com/adrianpk/poslan/pkg/model"
 	"github.com/go-kit/kit/log"
 	"github.com/google/uuid"
 )
 
 type loggingMiddleware struct {
+	ctx    context.Context
+	cfg    *config.Config
 	logger log.Logger
 	next   Service
 }
 
 // SignIn is a logging middleware wrapper over another interface implementation of SignIn.
-func (mw loggingMiddleware) SignIn(username, password string) (output *model.User, err error) {
+func (mw loggingMiddleware) SignIn(username, password string) (output string, err error) {
 	defer func(begin time.Time) {
 		input := fmt.Sprintf("{%s, %s}", username, password)
 		mw.logger.Log(
@@ -72,6 +75,15 @@ func (mw loggingMiddleware) Send(to, cc, bcc, subject, body string) (err error) 
 
 	err = mw.next.Send(to, cc, bcc, subject, body)
 	return
+}
+
+func (mw loggingMiddleware) Context() context.Context {
+	return mw.ctx
+}
+
+// Config returns service config.
+func (mw loggingMiddleware) Config() *config.Config {
+	return mw.cfg
 }
 
 // Remove is a logging middleware wrapper over another interface implementation of Remove.
