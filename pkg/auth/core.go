@@ -5,11 +5,10 @@ import (
 	"errors"
 	"time"
 
-	"github.com/go-kit/kit/log"
-
 	"github.com/adrianpk/poslan/internal/config"
 	"github.com/adrianpk/poslan/pkg/model"
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/go-kit/kit/log"
 )
 
 const (
@@ -18,7 +17,10 @@ const (
 
 // SecServer is an authentication service.
 type SecServer interface {
+	// Authenticate generate the bearer token.
 	Authenticate(string, string) (string, error)
+	// ValidateToken ensure that the authentication token is valid.
+	ValidateToken(string) error
 }
 
 // Server is an omplementation of SecServer.
@@ -48,7 +50,7 @@ func generateToken(signingKey []byte, clientID string) (string, error) {
 	return token.SignedString(signingKey)
 }
 
-// Authenticate a user
+// Authenticate a user.
 func (s Server) Authenticate(clientID string, clientSecret string) (string, error) {
 	if s.validSecret(clientID, clientSecret) {
 		signed, err := generateToken(s.key, clientID)
@@ -58,6 +60,51 @@ func (s Server) Authenticate(clientID string, clientSecret string) (string, erro
 		return signed, nil
 	}
 	return "", errors.New("wrong credentials")
+}
+
+// ValidateToken validate if token is valid.
+func (s Server) ValidateToken(token string) error {
+
+	t, err := jwt.Parse(token, s.Keys())
+	//(*jwt.Token, error)
+
+	if t.Valid {
+		return nil
+	}
+
+	if v, ok := err.(*jwt.ValidationError); ok {
+
+		if v.Errors&jwt.ValidationErrorMalformed != 0 {
+			// Token malformed
+			return err
+
+		} else if v.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
+			// Token expired
+			return err
+
+		} else {
+			// Other possible error
+			return err
+		}
+	}
+
+	return errors.New("invalid token")
+}
+
+// Keys returns a function used to generate the signing keys.
+func (s Server) Keys() func(token *jwt.Token) (interface{}, error) {
+	// signingkey: This a PoC.
+	// For a production ready app use something like this to generate the keys
+	// ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key
+	// openssl rsa -in jwtRS256.key -pubout -outform PEM -out jwtRS256.key.pub
+	// cat jwtRS256.key
+	// cat jwtRS256.key.pub
+	// And of course get it from another place (i.e.: Hashicorp Vault)
+	signingkey := []byte("55a124b9")
+
+	return func(token *jwt.Token) (interface{}, error) {
+		return signingkey, nil
+	}
 }
 
 // This is a PoC, in a real world implementation
