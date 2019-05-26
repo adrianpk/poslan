@@ -53,8 +53,8 @@ func (s *service) Send(ctx context.Context, to, cc, bcc, subject, body string) e
 	fromName := s.Config().Mailers.Providers[0].Name
 	fromEmail := s.Config().Mailers.Providers[0].Name
 
-	// FIX: We are traying to sens stright from SES
-	// implement Round Robin loop with fallback
+	// TODO: We are trying to send straight from SES
+	// implement a Round Robin loop with fallback
 	// in order to distribute delivery load.
 	provider := (s.Providers())[0]
 
