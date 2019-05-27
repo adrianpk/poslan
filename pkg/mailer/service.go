@@ -49,8 +49,8 @@ func (s *service) SignOut(ctx context.Context, id uuid.UUID) error {
 
 // Send lets the user send a mail.
 func (s *service) Send(ctx context.Context, to, cc, bcc, subject, body string) error {
-	fromName := s.Config().Mailers.Providers[0].Name
-	fromEmail := s.Config().Mailers.Providers[0].Name
+	fromName := s.Config().Mailers.Providers[0].Sender.Name
+	fromEmail := s.Config().Mailers.Providers[0].Sender.Email
 
 	// TODO: We are trying to send straight from SES
 	// implement a Round Robin loop with fallback
