@@ -3,16 +3,16 @@ name: poslan
 service:
   type: NodePort
   nodePort: ""
-  port: 2011
+  port: 8080
 
 deployment:
   replicaCount: 1
-  port: 2011
+  port: 8080
 
   image:
     private: true
     repository: adrianpksw
-    tag: stg
+    tag: stage
     pullPolicy: Always
     volumeMounts:
       configSecretMountPath: /configs
@@ -22,7 +22,7 @@ deployment:
   container:
     # These are example values.
     # The keys are not real.
-    # These kind of values should not be contro versioned.
+    # These kind of values should not be control versioned.
     env:
       - name: POSLAN_SERVER_PORT
         value: "8080"
