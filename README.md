@@ -8,7 +8,7 @@ A redundant mail delivery system.
   * Integration tests.
   * Simple SPA client.
   * Installation, deployment & use docs.
-  * D̶e̶p̶l̶o̶y̶ ̶t̶o̶ ̶G̶K̶E̶.̶.
+  * D̶e̶p̶l̶o̶y̶ ̶t̶o̶ ̶G̶K̶E̶.̶
   * ...
 
 ## Make
