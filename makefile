@@ -5,9 +5,9 @@ IMAGE_NAME=poslan
 # Accounts
 DOCKERHUB_USER=adrianpksw
 # GKE
-CLUSTER_STAGE=stage
-REGION=europe-west1
-PROJECT=adrianpksw-stage
+CLUSTER_STAGE=lab-stage-cluster
+REGION=europe-west3-a
+PROJECT=lab-staging-241918
 # Go
 MAKE_CMD=make
 # Go
@@ -74,7 +74,8 @@ deps:
 build-stage:
 	$(MAKE_CMD) build
 	$(DOCKER_LOGIN)
-	$(DOCKER_BUILD) -t $(DOCKERHUB_USER)/$(IMAGE_NAME):$(STAGE_TAG) .
+	# $(DOCKER_BUILD) --no-cache -t $(DOCKERHUB_USER)/$(IMAGE_NAME):$(STAGE_TAG) .
+	$(DOCKER_BUILD) --no-cache -t $(DOCKERHUB_USER)/$(IMAGE_NAME):$(STAGE_TAG) .
 	$(DOCKER_PUSH) $(DOCKERHUB_USER)/$(IMAGE_NAME):$(STAGE_TAG)
 
 connect-stage:
@@ -87,7 +88,7 @@ update-secrets-stage:
 
 install-stage:
 	$(MAKE_CMD) connect-stage
-	$(HELM_INSTALL) --name $(IMAGE_NAME) -f ./deployments/helm/values-$(STAGE_TAG).yaml ./deployments/hel
+	$(HELM_INSTALL) --name $(IMAGE_NAME) -f ./deployments/helm/values-stage.yaml ./deployments/helm
 
 delete-stage:
 	$(MAKE_CMD) connect-stage
@@ -96,5 +97,5 @@ delete-stage:
 deploy-stage:
 	$(MAKE_CMD) build-stage
 	$(MAKE_CMD) connect-stage
-	$(MAKE_CMD) delete-state
-	$(HELM_INSTALL) --replace --name $(IMAGE_NAME) -f ./deployments/helm/values-$(STAGE_TAG).yaml ./deployments/hel
+	$(MAKE_CMD) delete-stage
+	$(HELM_INSTALL) --replace --name $(IMAGE_NAME) -f ./deployments/helm/values-stage.yaml ./deployments/helm

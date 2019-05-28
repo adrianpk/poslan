@@ -7,7 +7,13 @@ mailer:
     - name: "amazon"
       type: "amazon-ses"
       enabled: true
+      sender:
+        name: sender
+        email: sendmailtest@sharkslasers.com
 
     - name: "sendgrid"
       type: "sendgrid"
       enabled: true
+      sender:
+        name: sender
+        email: sendmailtest@sharkslasers.com

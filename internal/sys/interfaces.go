@@ -1,5 +1,7 @@
 package sys
 
+import "github.com/adrianpk/poslan/pkg/model"
+
 // Worker interface
 type Worker interface {
 	// Returns worker name.
@@ -23,6 +25,6 @@ type Provider interface {
 	Start() error
 	// Stop provider.
 	Stop() error
-	// Client get a provider client implementation.
-	Client() interface{}
+	// Send and email.
+	Send(*model.Email) (resend bool, err error)
 }

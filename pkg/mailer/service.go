@@ -14,12 +14,12 @@ import (
 	"sync"
 
 	"github.com/adrianpk/poslan/internal/config"
+	c "github.com/adrianpk/poslan/internal/config"
 	"github.com/adrianpk/poslan/internal/sys"
 	"github.com/adrianpk/poslan/pkg/auth"
 	"github.com/adrianpk/poslan/pkg/model"
 	"github.com/go-kit/kit/log"
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type service struct {
@@ -49,9 +49,23 @@ func (s *service) SignOut(ctx context.Context, id uuid.UUID) error {
 
 // Send lets the user send a mail.
 func (s *service) Send(ctx context.Context, to, cc, bcc, subject, body string) error {
-	from := "fix:username" // TODO: Get from user in session data.
-	m := makeEmail(from, to, cc, bcc, subject, body)
-	s.logger.Log("message", fmt.Sprintf("%+v", m))
+	fromName := s.Config().Mailers.Providers[0].Sender.Name
+	fromEmail := s.Config().Mailers.Providers[0].Sender.Email
+
+	// TODO: We are trying to send straight from SES
+	// implement a Round Robin loop with fallback
+	// in order to distribute delivery load.
+	provider := (s.Providers())[0]
+
+	m := makeEmail(fromName, fromEmail, to, cc, bcc, subject, body)
+	_, err := provider.Send(m)
+
+	s.logger.Log(
+		"level", c.LogLevel.Debug,
+		"method", "Send",
+		"email", fmt.Sprintf("%+v", m),
+		"err", err,
+	)
 
 	return errors.New("not implemented")
 }
@@ -78,9 +92,10 @@ func (s *service) Logger() log.Logger {
 }
 
 // Utility functions
-func makeEmail(from, to, cc, bcc, subject, body string) *model.Email {
+func makeEmail(name, from, to, cc, bcc, subject, body string) *model.Email {
 	return &model.Email{
 		ID:      uuid.New(),
+		Name:    name,
 		From:    from,
 		To:      to,
 		CC:      cc,
@@ -89,12 +104,4 @@ func makeEmail(from, to, cc, bcc, subject, body string) *model.Email {
 		Body:    body,
 		Charset: charset,
 	}
-}
-
-func passwordMatches(digest, password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(digest), []byte(password))
-	if err != nil {
-		return false
-	}
-	return true
 }

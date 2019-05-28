@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 # Vars
-HOST="localhost"
+HOST="10.35.240.75"
 PORT="8080"
 PATH="signin"
 
