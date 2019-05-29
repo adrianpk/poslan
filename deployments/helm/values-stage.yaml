@@ -56,3 +56,5 @@ deployment:
         value: "BKIAHI2FF3AHO1ZMJEXJ"
       - name: AWS_SECRET_KEY
         value: "2BiWmd2Hdgmk2rR4plG332bHwvLGiFOcxLLtDy1g"
+      - name: SENDGRID_API_KEY
+        value: "h021spSdgTNABAha22u633kd8l49b2a-lL3Bo0YX2n3"

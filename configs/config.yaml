@@ -7,6 +7,8 @@ mailer:
     - name: "amazon"
       type: "amazon-ses"
       enabled: true
+      idKey: "-"
+      apiKey: "-"
       sender:
         name: sender
         email: sendmailtest@sharkslasers.com
@@ -14,6 +16,8 @@ mailer:
     - name: "sendgrid"
       type: "sendgrid"
       enabled: true
+      idKey: "-"
+      apiKey: "-"
       sender:
         name: sender
         email: sendmailtest@sharkslasers.com
