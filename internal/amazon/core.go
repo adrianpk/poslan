@@ -143,7 +143,7 @@ func (p *SESProvider) Start() error {
 	return nil
 }
 
-// Stop the mailers.
+// Stop the mailer.
 func (p *SESProvider) Stop() error {
 	return nil
 }
@@ -153,7 +153,7 @@ func (p *SESProvider) IsReady() bool {
 	return true
 }
 
-// Client get the provider client.
+// Client return the provider client.
 func (p *SESProvider) Client() interface{} {
 	return p.client
 }

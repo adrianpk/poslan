@@ -57,7 +57,7 @@ func (p *SGProvider) Send(em *model.Email) (resend bool, err error) {
 }
 
 func newSGEmail(from, to, cc, bcc, subject, body, charset string) *sgmail.SGMailV3 {
-	// Assemble the esgmail.
+	// Assemble the mail.
 	f := sgmail.NewEmail(from, from)
 	s := subject
 	t := sgmail.NewEmail(to, to)
@@ -82,7 +82,7 @@ func (p *SGProvider) Start() error {
 	return nil
 }
 
-// Stop the mailers.
+// Stop the mailer.
 func (p *SGProvider) Stop() error {
 	return nil
 }
@@ -92,7 +92,7 @@ func (p *SGProvider) IsReady() bool {
 	return true
 }
 
-// Client get the provider client.
+// Client return the provider client.
 func (p *SGProvider) Client() interface{} {
 	return p.client
 }
