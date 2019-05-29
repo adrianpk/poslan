@@ -38,6 +38,8 @@ type ProviderConfig struct {
 	Type     string       `yaml:"type"`
 	Enabled  bool         `yaml:"enabled"`
 	TestOnly bool         `yaml:"test"`
+	IDKey    string       `yaml:"idKey"`
+	APIKey   string       `yaml:"apiKey"`
 	Sender   SenderConfig `yaml:"sender"`
 }
 
