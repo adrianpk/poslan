@@ -176,7 +176,7 @@ func (svc *service) checkCancel() {
 // to start each configured provider.
 func (svc *service) StartProviders() {
 	for _, m := range svc.providers {
-		m.Stop()
+		m.Start()
 	}
 }
 
@@ -184,7 +184,7 @@ func (svc *service) StartProviders() {
 // to stop each configured provider.
 func (svc *service) StopProviders() {
 	for _, m := range svc.providers {
-		m.Start()
+		m.Stop()
 	}
 }
 
