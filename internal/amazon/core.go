@@ -117,6 +117,12 @@ func newSESEmail(from, to, cc, bcc, subject, body, charset string) *ses.SendEmai
 }
 
 func newProvider(ctx context.Context, cfg *config.Config, logger log.Logger) (*SESProvider, error) {
+	// Create an AmazonSESS session.
+	_, ok := cfg.Provider(config.ProviderType.AmazonSES)
+	if !ok {
+		return nil, fmt.Errorf("no provider of type '%s' in config", config.ProviderType.SendGrid)
+	}
+
 	// Create a new session in the us-west-2 region.
 	// Replace us-west-2 with the AWS Region you're using for Amazon SES.
 	sess, err := session.NewSession(&aws.Config{
