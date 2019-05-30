@@ -9,6 +9,7 @@ package sendgrid
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/adrianpk/poslan/internal/config"
 	"github.com/adrianpk/poslan/pkg/model"
@@ -67,7 +68,11 @@ func newSGEmail(from, to, cc, bcc, subject, body, charset string) *sgmail.SGMail
 
 func newProvider(ctx context.Context, cfg *config.Config, logger log.Logger) (*SGProvider, error) {
 	// Create a SendGrid session.
-	clt := sg.NewSendClient(cfg.Mailers.Providers[1].APIKey)
+	p, ok := cfg.Provider(config.ProviderType.SendGrid)
+	if !ok {
+		return nil, fmt.Errorf("no provider of type '%s' in config", config.ProviderType.SendGrid)
+	}
+	clt := sg.NewSendClient(p.APIKey)
 
 	return &SGProvider{
 		ctx:    ctx,
