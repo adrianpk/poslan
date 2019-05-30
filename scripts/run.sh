@@ -12,7 +12,7 @@ export LIVENESS_PING_PORT=18080
 export PROBE_PING_PORT=18081
 export PROBE_MAX_INACTIVE_SECS=900
 export PROBE_MAX_INACTIVE_ATTEMPTS=3
-# Mailers
+# Mailer
 # Amazon SES
 export PROVIDER_NAME_1=amazon
 export PROVIDER_TYPE_1=amazon-ses
