@@ -14,7 +14,6 @@ import (
 	"sync"
 
 	"github.com/adrianpk/poslan/internal/config"
-	c "github.com/adrianpk/poslan/internal/config"
 	"github.com/adrianpk/poslan/internal/sys"
 	"github.com/adrianpk/poslan/pkg/auth"
 	"github.com/adrianpk/poslan/pkg/model"
@@ -49,25 +48,31 @@ func (s *service) SignOut(ctx context.Context, id uuid.UUID) error {
 
 // Send lets the user send a mail.
 func (s *service) Send(ctx context.Context, to, cc, bcc, subject, body string) error {
-	fromName := s.Config().Mailers.Providers[0].Sender.Name
-	fromEmail := s.Config().Mailers.Providers[0].Sender.Email
+	// FIX: take following two values from those stored in context
+	// They are set by authentication middleware.
+	fromName := s.Config().Mailer.Providers[0].Sender.Name
+	fromEmail := s.Config().Mailer.Providers[0].Sender.Email
 
-	// TODO: We are trying to send straight from SES
-	// implement a Round Robin loop with fallback
-	// in order to distribute delivery load.
-	provider := (s.Providers())[0]
+	p1, ok := s.ProviderByPriority(1)
+	if !ok {
+		return errors.New("no providers configured")
+	}
+
+	p2, ok2 := s.ProviderByPriority(2)
 
 	m := makeEmail(fromName, fromEmail, to, cc, bcc, subject, body)
-	_, err := provider.Send(m)
+	resend, err := p1.Send(m)
 
-	s.logger.Log(
-		"level", c.LogLevel.Debug,
-		"method", "Send",
-		"email", fmt.Sprintf("%+v", m),
-		"err", err,
-	)
+	// Previous atempt failed and and seconf provider enabled.
+	if resend && ok2 {
+		resend, err = p2.Send(m)
+	}
 
-	return errors.New("not implemented")
+	if resend {
+		return fmt.Errorf("email '%s' cannot be sent: %s", m.ID, err.Error())
+	}
+
+	return nil
 }
 
 // Providers returns service providers.
@@ -89,6 +94,26 @@ func (s *service) Config() *config.Config {
 // Logger returns service imterface implemention logger.
 func (s *service) Logger() log.Logger {
 	return s.logger
+}
+
+// ProviderByPriority returns a provider by
+// its prioririty (1..n)
+func (s *service) ProviderByPriority(priority int) (p sys.Provider, ok bool) {
+	for i, p := range s.providers {
+		if i == priority-1 {
+			return p, true
+		}
+	}
+	return s.FallbackProvider()
+}
+
+// FallbackProvider returns the default provider
+// if it was provided in config.
+func (s *service) FallbackProvider() (p sys.Provider, ok bool) {
+	if len(s.providers) > 0 {
+		return s.providers[0], true
+	}
+	return nil, false
 }
 
 // Utility functions

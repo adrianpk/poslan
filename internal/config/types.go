@@ -7,7 +7,7 @@ type Config struct {
 	// AppConfig stores app related configuration.
 	App AppConfig `yaml:"app"`
 	// MailerConfig stores mail service provider configuration.
-	Mailers MailerConfig `yaml:"mail"`
+	Mailer MailerConfig `yaml:"mail"`
 }
 
 // AppConfig stores app related configuration..
@@ -43,10 +43,10 @@ type ProviderConfig struct {
 	Sender   SenderConfig `yaml:"sender"`
 }
 
-// LogLevel enumerates service log level.
 type logLevel string
 
-// LogLevels - App log levels.
+// LogLevels let store
+// all valid log levels.
 type LogLevels struct {
 	// Debug log level.
 	Debug logLevel
@@ -58,4 +58,46 @@ type LogLevels struct {
 	Error logLevel
 	// Fatal log level.
 	Fatal logLevel
+}
+
+type providerType string
+
+func (pt providerType) String() string {
+	return pt.String()
+}
+
+// ProviderTypes let store
+// all valid mail provider types.
+type ProviderTypes struct {
+	// Amazon SES provider type.
+	AmazonSES providerType
+	// SendGrid provider type.
+	SendGrid providerType
+}
+
+// Provider returns a provider by its type.
+// Currently two, of different types, ses, sendgrid.
+// If name is not provided it returns the first of type.
+// If name is provided, the first one that meets both conditions returned.
+func (c *Config) Provider(pType providerType, name ...string) (pc *ProviderConfig, ok bool) {
+	if len(name) > 0 {
+		return c.Mailer.providerByTypeAndName(pType.String(), name[0])
+	}
+	for _, pc := range c.Mailer.Providers {
+		if pc.Type == pType.String() {
+			return &pc, true
+		}
+	}
+	return nil, false
+}
+
+// providerByTypeAndName returns a provider by its type and name
+// Currently two, of different types, ses, sendgrid.
+func (mc *MailerConfig) providerByTypeAndName(pType, name string) (pc *ProviderConfig, ok bool) {
+	for _, pc := range mc.Providers {
+		if pc.Type == pType && pc.Name == name {
+			return &pc, true
+		}
+	}
+	return nil, false
 }

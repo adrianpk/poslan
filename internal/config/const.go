@@ -8,7 +8,8 @@
 package config
 
 var (
-	// LogLevel - App log levels.
+	// LogLevel stores all
+	// valid mail log levels.
 	LogLevel = LogLevels{
 		// Debug - Debug log level.
 		Debug: "debug",
@@ -20,5 +21,14 @@ var (
 		Error: "error",
 		// Fatal - Fatal log level.
 		Fatal: "fatal",
+	}
+
+	// ProviderType stores all
+	// valid mail Provider types
+	ProviderType = ProviderTypes{
+		// SendGrid provider type.
+		AmazonSES: "amazon-ses",
+		// SendGrid provider type.
+		SendGrid: "sendgrid",
 	}
 )

@@ -53,8 +53,8 @@ func loadFromEnvvar() (*Config, error) {
 	}
 
 	cfg := &Config{
-		App:     app,
-		Mailers: mailers,
+		App:    app,
+		Mailer: mailers,
 	}
 
 	return cfg, nil
@@ -155,8 +155,8 @@ func loadDefault() (*Config, error) {
 	sendgrid := ProviderConfig{Name: "sendgrid"}
 
 	// Mail
-	cfg.Mailers.Providers[0] = amazon
-	cfg.Mailers.Providers[1] = sendgrid
+	cfg.Mailer.Providers[0] = amazon
+	cfg.Mailer.Providers[1] = sendgrid
 
 	return &cfg, nil
 }
