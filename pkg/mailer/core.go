@@ -172,7 +172,7 @@ func (svc *service) checkCancel() {
 	svc.StopProviders()
 }
 
-// StarMailers is used in service startup
+// StarMailer is used in service startup
 // to start each configured provider.
 func (svc *service) StartProviders() {
 	for _, m := range svc.providers {
@@ -180,7 +180,7 @@ func (svc *service) StartProviders() {
 	}
 }
 
-// StarMailers is used in service stop
+// StarMailer is used in service stop
 // to stop each configured provider.
 func (svc *service) StopProviders() {
 	for _, m := range svc.providers {
