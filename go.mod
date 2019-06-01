@@ -9,6 +9,7 @@ require (
 	github.com/go-kit/kit v0.8.0
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.2 // indirect
+	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/openzipkin/zipkin-go v0.1.6
 	github.com/prometheus/client_golang v0.9.3
