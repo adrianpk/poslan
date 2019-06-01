@@ -63,7 +63,7 @@ type LogLevels struct {
 type providerType string
 
 func (pt providerType) String() string {
-	return pt.String()
+	return string(pt)
 }
 
 // ProviderTypes let store

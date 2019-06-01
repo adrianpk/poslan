@@ -120,7 +120,7 @@ func newProvider(ctx context.Context, cfg *config.Config, logger log.Logger) (*S
 	// Create an AmazonSESS session.
 	_, ok := cfg.Provider(config.ProviderType.AmazonSES)
 	if !ok {
-		return nil, fmt.Errorf("no provider of type '%s' in config", config.ProviderType.SendGrid)
+		return nil, fmt.Errorf("no provider of type '%s' in config", config.ProviderType.AmazonSES)
 	}
 
 	// Create a new session in the us-west-2 region.

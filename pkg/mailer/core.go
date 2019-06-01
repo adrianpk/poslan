@@ -9,10 +9,12 @@ package mailer
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	cmlog "log"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 
 	// health "github.com/heptiolabs/healthcheck"
@@ -22,6 +24,8 @@ import (
 	c "github.com/adrianpk/poslan/internal/config"
 	"github.com/adrianpk/poslan/pkg/auth"
 	"github.com/go-kit/kit/log"
+	"github.com/heptiolabs/healthcheck"
+	health "github.com/heptiolabs/healthcheck"
 	zipkin "github.com/openzipkin/zipkin-go"
 	reporter "github.com/openzipkin/zipkin-go/reporter/http"
 )
@@ -53,13 +57,12 @@ func makeService(ctx context.Context, cfg *c.Config, log log.Logger) *service {
 
 // Init a service instance.
 func (svc *service) Init() (s Service, err error) {
+	svc.Disable()
 	// FIX: Readiness & liveness checks temporarily disabled.
-	// s.health = health.NewHandler()
-	// TODO: Implement IsAlive(...)
-	// s.health.AddLivenessCheck("live", s.IsAlive(s.cfg))
-	// TODO: Implement IsReady(...)
-	// s.health.AddReadinessCheck("ready", s.IsReady())
-	// http.ListenAndServe(s.cfg.App.Probe.LivenessServerAddress(), s.health)
+	svc.health = health.NewHandler()
+	svc.health.AddReadinessCheck("ready", svc.ReadinessCheck())
+	svc.health.AddLivenessCheck("heap-threshold", svc.HeapLivenessCheck(10))
+	svc.health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(25))
 
 	ok1 := initAmazon(svc)
 	// ok2 := initSesgrid(s)
@@ -109,19 +112,6 @@ func addLogging(svc Service, logger log.Logger) Service {
 	}
 	return svc
 }
-
-// TODO: Implement tracing middleware.
-// func addTracing(svc Service) service {
-// 	if tracingOn {
-// 		// Tracer
-// 		tracer, err := makeTracer()
-// 		if err != nil {
-// 			return svc
-// 		}
-// 		return tracingMiddleware{logger: logger, next: svc}
-// 	}
-// 	return svc
-// }
 
 func addInstrumentation(svc Service, logger log.Logger) Service {
 	if instrumentationOn {
@@ -186,6 +176,44 @@ func (svc *service) StopProviders() {
 	for _, m := range svc.providers {
 		m.Stop()
 	}
+}
+
+// IsReady is a readiness test for the service.
+func (svc *service) ReadinessCheck() healthcheck.Check {
+	return func() error {
+
+		if !svc.ready {
+			msg := fmt.Sprintf("%s service is not ready!", svc.name)
+			svc.logger.Log("level", c.LogLevel.Warn, "message", msg)
+			return errors.New(msg)
+		}
+
+		msg := fmt.Sprintf("%s service is ready", svc.name)
+		svc.logger.Log("level", c.LogLevel.Info, "message", msg)
+
+		return nil
+	}
+}
+
+// HeapLivenessCheck is a heap allocation liveness test for the service.
+func (svc *service) HeapLivenessCheck(maxMb uint64) healthcheck.Check {
+	return func() error {
+		var m runtime.MemStats
+		runtime.ReadMemStats(&m)
+		mb := toMb(m.Alloc)
+		r := mb > maxMb
+
+		if r {
+			msg := fmt.Sprintf("%s is not in healthy state.", svc.name)
+			return errors.New(msg)
+		}
+
+		return nil
+	}
+}
+
+func toMb(b uint64) uint64 {
+	return b / 1024 / 1024
 }
 
 func checkError(err error, msg ...string) {

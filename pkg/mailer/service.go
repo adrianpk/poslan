@@ -19,6 +19,7 @@ import (
 	"github.com/adrianpk/poslan/pkg/model"
 	"github.com/go-kit/kit/log"
 	"github.com/google/uuid"
+	health "github.com/heptiolabs/healthcheck"
 )
 
 type service struct {
@@ -29,6 +30,9 @@ type service struct {
 	logger    log.Logger
 	auth      auth.SecServer
 	providers []sys.Provider
+	health    health.Handler
+	ready     bool
+	alive     bool
 }
 
 // SignIn lets a user sign in providing username and password.
@@ -78,6 +82,28 @@ func (s *service) Send(ctx context.Context, to, cc, bcc, subject, body string) e
 // Providers returns service providers.
 func (s *service) Providers() []sys.Provider {
 	return s.providers
+}
+
+// Enable set to true the ready state.
+func (s *service) Enable() {
+	s.ready = true
+}
+
+// Disable set to false the ready state.
+func (s *service) Disable() {
+	s.ready = false
+}
+
+// IsAlive return true if the service is ready to serve requests.
+// This function can be used by a readiness checker.
+func (s *service) IsReady() bool {
+	return s.ready
+}
+
+// IsAlive return true if the service is alive.
+// This function can be used by a liveness checker.
+func (s *service) IsAlive() bool {
+	return s.alive
 }
 
 // Misc
