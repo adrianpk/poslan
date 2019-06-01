@@ -40,12 +40,17 @@ func Init(ctx context.Context, cfg *config.Config, log log.Logger) (*SGProvider,
 
 // Send an mail.
 func (p *SGProvider) Send(em *model.Email) (resend bool, err error) {
-
 	email := newSGEmail(em.From, em.To, em.CC, em.BCC, em.Subject, em.Body, em.Charset)
-	_, err = p.client.Send(email)
+
+	res, err := p.client.Send(email)
 
 	if err != nil {
 		return true, err
+	}
+	// If no errores but response status code != accepted (202)
+	if res.StatusCode != 202 {
+		msg := fmt.Sprintf("cannot send email - status code: '%d'", res.StatusCode)
+		return true, errors.New(msg)
 	}
 
 	return false, nil
@@ -57,7 +62,10 @@ func newSGEmail(from, to, cc, bcc, subject, body, charset string) *sgmail.SGMail
 	s := subject
 	t := sgmail.NewEmail(to, to)
 	tb := body
-	return sgmail.NewSingleEmail(f, s, t, tb, "")
+	hb := fmt.Sprintf("<html><html><div>%s</div></body></html>", body)
+	e := sgmail.NewSingleEmail(f, s, t, tb, hb)
+	fmt.Printf("EMAIL is %+v\n", e)
+	return e
 }
 
 func newProvider(ctx context.Context, cfg *config.Config, logger log.Logger) (*SGProvider, error) {
@@ -66,6 +74,7 @@ func newProvider(ctx context.Context, cfg *config.Config, logger log.Logger) (*S
 	if !ok {
 		return nil, fmt.Errorf("no provider of type '%s' in config", config.ProviderType.SendGrid)
 	}
+
 	clt := sg.NewSendClient(p.APIKey)
 
 	return &SGProvider{
