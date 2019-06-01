@@ -61,10 +61,9 @@ func loadFromEnvvar() (*Config, error) {
 }
 
 func loadProvidersFromEnvars() []ProviderConfig {
-	// Nº max providers
-	n := 2
+
 	// Providers envvar value prefixes
-	pfxs := []string{"PROVIDER_NAME", "PROVIDER_TYPE", "PROVIDER_ENABLED", "PROVIDER_TESTONLY", "PROVIDER_SENDER_NAME", "PROVIDER_SENDER_EMAIL"}
+	pfxs := []string{"PROVIDER_NAME", "PROVIDER_TYPE", "PROVIDER_ENABLED", "PROVIDER_PRIORITY", "PROVIDER_SENDER_NAME", "PROVIDER_SENDER_EMAIL"}
 	envall := composeName(pfxs, n) // PROVIDER_NAME_1, PROVIDER_TYPE_1... PROVIDER_SENDER_EMAIL_2
 
 	ps := make([]ProviderConfig, 0)
@@ -76,16 +75,16 @@ func loadProvidersFromEnvars() []ProviderConfig {
 
 		if nm != "" && tp != "" {
 
-			en, _ := strconv.ParseBool(GetEnvOrDef(s[2], "true"))  // Enabled
-			ts, _ := strconv.ParseBool(GetEnvOrDef(s[3], "false")) // TestOnly
-			sn := GetEnvOrDef(s[4], "")                            // Sender name
-			se := GetEnvOrDef(s[5], "")                            // Sender email
+			en, _ := strconv.ParseBool(GetEnvOrDef(s[2], "true")) // Enabled
+			pr, _ := strconv.Atoi(GetEnvOrDef(s[3], "1"))         // Priority
+			sn := GetEnvOrDef(s[4], "")                           // Sender name
+			se := GetEnvOrDef(s[5], "")                           // Sender email
 
 			p := ProviderConfig{
 				Name:     nm,
 				Type:     tp,
 				Enabled:  en,
-				TestOnly: ts,
+				Priority: pr,
 				Sender: SenderConfig{
 					Name:  sn,
 					Email: se,

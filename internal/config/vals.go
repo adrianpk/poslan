@@ -7,6 +7,11 @@
 
 package config
 
+const (
+	// Nº max providers
+	n = 2
+)
+
 var (
 	// LogLevel stores all
 	// valid mail log levels.
