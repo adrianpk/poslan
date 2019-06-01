@@ -34,6 +34,9 @@ export PROVIDER_ENABLED_2=true
 export PROVIDER_PRIORITY_2=2
 export PROVIDER_SENDER_NAME_2=SendMailTest
 export PROVIDER_SENDER_EMAIL_2=sendmailtest@sharkslasers.com
+# These are example values.
+# The keys are not real.
+# These kind of values should not be control versioned
 export PROVIDER_API_KEY_2=AB.ZaPo123TTseXyZ1uoj-oJg.rggK2pSAf8NABAhpiKf88RKx9D_hb2a-223Bo0YX"KL
 
 # Start
