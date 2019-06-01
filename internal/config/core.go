@@ -63,7 +63,9 @@ func loadFromEnvvar() (*Config, error) {
 func loadProvidersFromEnvars() []ProviderConfig {
 
 	// Providers envvar value prefixes
-	pfxs := []string{"PROVIDER_NAME", "PROVIDER_TYPE", "PROVIDER_ENABLED", "PROVIDER_PRIORITY", "PROVIDER_SENDER_NAME", "PROVIDER_SENDER_EMAIL"}
+	pfxs := []string{"PROVIDER_NAME", "PROVIDER_TYPE", "PROVIDER_ENABLED",
+		"PROVIDER_PRIORITY", "PROVIDER_SENDER_NAME",
+		"PROVIDER_SENDER_EMAIL", "PROVIDER_ID_KEY", "PROVIDER_API_KEY"}
 	envall := composeName(pfxs, n) // PROVIDER_NAME_1, PROVIDER_TYPE_1... PROVIDER_SENDER_EMAIL_2
 
 	ps := make([]ProviderConfig, 0)
@@ -79,12 +81,16 @@ func loadProvidersFromEnvars() []ProviderConfig {
 			pr, _ := strconv.Atoi(GetEnvOrDef(s[3], "1"))         // Priority
 			sn := GetEnvOrDef(s[4], "")                           // Sender name
 			se := GetEnvOrDef(s[5], "")                           // Sender email
+			ik := GetEnvOrDef(s[6], "")                           // ID Key (i.e.: AWS Access key)
+			ak := GetEnvOrDef(s[7], "")                           // API Key (i.e.: AWS or SendGrid API key)
 
 			p := ProviderConfig{
 				Name:     nm,
 				Type:     tp,
 				Enabled:  en,
 				Priority: pr,
+				IDKey:    ik,
+				APIKey:   ak,
 				Sender: SenderConfig{
 					Name:  sn,
 					Email: se,
