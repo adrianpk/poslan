@@ -7,6 +7,7 @@ mailer:
     - name: "amazon"
       type: "amazon-ses"
       enabled: true
+      priority: 1
       idKey: "-"
       apiKey: "-"
       sender:
@@ -16,6 +17,7 @@ mailer:
     - name: "sendgrid"
       type: "sendgrid"
       enabled: true
+      priority: 2
       idKey: "-"
       apiKey: "-"
       sender:

@@ -37,7 +37,7 @@ type ProviderConfig struct {
 	Name     string       `yaml:"name"`
 	Type     string       `yaml:"type"`
 	Enabled  bool         `yaml:"enabled"`
-	TestOnly bool         `yaml:"test"`
+	Priority int          `yaml:"priority"`
 	IDKey    string       `yaml:"idKey"`
 	APIKey   string       `yaml:"apiKey"`
 	Sender   SenderConfig `yaml:"sender"`
@@ -63,7 +63,7 @@ type LogLevels struct {
 type providerType string
 
 func (pt providerType) String() string {
-	return pt.String()
+	return string(pt)
 }
 
 // ProviderTypes let store
@@ -73,6 +73,16 @@ type ProviderTypes struct {
 	AmazonSES providerType
 	// SendGrid provider type.
 	SendGrid providerType
+}
+
+// HasProviderType is true if there is configuration for the type of the argument.
+func (c *Config) HasProviderType(pType providerType) (ok bool) {
+	for _, pc := range c.Mailer.Providers {
+		if pc.Type == pType.String() {
+			return true
+		}
+	}
+	return false
 }
 
 // Provider returns a provider by its type.

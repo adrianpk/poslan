@@ -69,7 +69,7 @@ deps:
 	$(GO_GET) -u honnef.co/go/tools
 	$(GO_GET) -u github.com/dgrijalva/jwt-go
 	$(GO_GET) -u github.com/go-kit/kit/auth/jwt
-	$(GO_GET) -u github.com/heptiolabs/healthcheckSTAGE
+	$(GO_GET) -u github.com/heptiolabs/healthcheck
 	$(GO_GET) -u github.com/sendgrid/sendgrid-go
 
 build-stage:

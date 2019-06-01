@@ -9,24 +9,27 @@ package mailer
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	cmlog "log"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
-
-	// health "github.com/heptiolabs/healthcheck"
 
 	"github.com/adrianpk/poslan/internal/amazon"
 	"github.com/adrianpk/poslan/internal/config"
 	c "github.com/adrianpk/poslan/internal/config"
+	"github.com/adrianpk/poslan/internal/sendgrid"
 	"github.com/adrianpk/poslan/pkg/auth"
 	"github.com/go-kit/kit/log"
+	"github.com/heptiolabs/healthcheck"
+	health "github.com/heptiolabs/healthcheck"
 	zipkin "github.com/openzipkin/zipkin-go"
 	reporter "github.com/openzipkin/zipkin-go/reporter/http"
 )
 
-var (
+const (
 	serviceName        = "poslanAuthentication"
 	serviceHostPort    = "localhost:8000"
 	zipkinHTTPEndpoint = "http://localhost:9411/api/v2/spans"
@@ -53,23 +56,22 @@ func makeService(ctx context.Context, cfg *c.Config, log log.Logger) *service {
 
 // Init a service instance.
 func (svc *service) Init() (s Service, err error) {
+	svc.Disable()
 	// FIX: Readiness & liveness checks temporarily disabled.
-	// s.health = health.NewHandler()
-	// TODO: Implement IsAlive(...)
-	// s.health.AddLivenessCheck("live", s.IsAlive(s.cfg))
-	// TODO: Implement IsReady(...)
-	// s.health.AddReadinessCheck("ready", s.IsReady())
-	// http.ListenAndServe(s.cfg.App.Probe.LivenessServerAddress(), s.health)
+	svc.health = health.NewHandler()
+	svc.health.AddReadinessCheck("ready", svc.ReadinessCheck())
+	svc.health.AddLivenessCheck("heap-threshold", svc.HeapLivenessCheck(10))
+	svc.health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(25))
 
 	ok1 := initAmazon(svc)
-	// ok2 := initSesgrid(s)
+	ok2 := initSendGrid(svc)
 
-	if !<-ok1 {
+	if !(<-ok1 && <-ok2) {
 		return nil, fmt.Errorf("Cannot initialize '%s' service", svc.name)
 	}
 
 	s = addLogging(svc, svc.logger)
-	// s = addTracing(svc)
+	// s = addTracing(svc) // TODO: Implement.
 	s = addInstrumentation(svc, svc.logger)
 	s = addAuthentication(svc, svc.logger, svc.auth)
 
@@ -86,7 +88,31 @@ func initAmazon(svc *service) chan bool {
 				"level", config.LogLevel.Error,
 				"package", "main",
 				"method", "initAmazon",
-				"message", "Cannot initialize Amazon SES client.",
+				"message", "Cannot initialize Amazon SES provider.",
+				"error", err.Error(),
+			)
+			ok <- false
+			return
+		}
+		svc.mux.Lock()
+		svc.providers = append(svc.providers, p)
+		svc.mux.Unlock()
+		ok <- true
+	}()
+	return ok
+}
+
+func initSendGrid(svc *service) chan bool {
+	ok := make(chan bool)
+	go func() {
+		defer close(ok)
+		p, err := sendgrid.Init(svc.ctx, svc.cfg, svc.logger)
+		if err != nil {
+			svc.logger.Log(
+				"level", config.LogLevel.Error,
+				"package", "main",
+				"method", "initSendGreid",
+				"message", "Cannot initialize SendGrid provider.",
 				"error", err.Error(),
 			)
 			ok <- false
@@ -109,19 +135,6 @@ func addLogging(svc Service, logger log.Logger) Service {
 	}
 	return svc
 }
-
-// TODO: Implement tracing middleware.
-// func addTracing(svc Service) service {
-// 	if tracingOn {
-// 		// Tracer
-// 		tracer, err := makeTracer()
-// 		if err != nil {
-// 			return svc
-// 		}
-// 		return tracingMiddleware{logger: logger, next: svc}
-// 	}
-// 	return svc
-// }
 
 func addInstrumentation(svc Service, logger log.Logger) Service {
 	if instrumentationOn {
@@ -186,6 +199,44 @@ func (svc *service) StopProviders() {
 	for _, m := range svc.providers {
 		m.Stop()
 	}
+}
+
+// IsReady is a readiness test for the service.
+func (svc *service) ReadinessCheck() healthcheck.Check {
+	return func() error {
+
+		if !svc.ready {
+			msg := fmt.Sprintf("%s service is not ready!", svc.name)
+			svc.logger.Log("level", c.LogLevel.Warn, "message", msg)
+			return errors.New(msg)
+		}
+
+		msg := fmt.Sprintf("%s service is ready", svc.name)
+		svc.logger.Log("level", c.LogLevel.Info, "message", msg)
+
+		return nil
+	}
+}
+
+// HeapLivenessCheck is a heap allocation liveness test for the service.
+func (svc *service) HeapLivenessCheck(maxMb uint64) healthcheck.Check {
+	return func() error {
+		var m runtime.MemStats
+		runtime.ReadMemStats(&m)
+		mb := toMb(m.Alloc)
+		r := mb > maxMb
+
+		if r {
+			msg := fmt.Sprintf("%s is not in healthy state.", svc.name)
+			return errors.New(msg)
+		}
+
+		return nil
+	}
+}
+
+func toMb(b uint64) uint64 {
+	return b / 1024 / 1024
 }
 
 func checkError(err error, msg ...string) {
