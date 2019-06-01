@@ -17,11 +17,10 @@ import (
 	"runtime"
 	"syscall"
 
-	// health "github.com/heptiolabs/healthcheck"
-
 	"github.com/adrianpk/poslan/internal/amazon"
 	"github.com/adrianpk/poslan/internal/config"
 	c "github.com/adrianpk/poslan/internal/config"
+	"github.com/adrianpk/poslan/internal/sendgrid"
 	"github.com/adrianpk/poslan/pkg/auth"
 	"github.com/go-kit/kit/log"
 	"github.com/heptiolabs/healthcheck"
@@ -30,7 +29,7 @@ import (
 	reporter "github.com/openzipkin/zipkin-go/reporter/http"
 )
 
-var (
+const (
 	serviceName        = "poslanAuthentication"
 	serviceHostPort    = "localhost:8000"
 	zipkinHTTPEndpoint = "http://localhost:9411/api/v2/spans"
@@ -65,14 +64,14 @@ func (svc *service) Init() (s Service, err error) {
 	svc.health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(25))
 
 	ok1 := initAmazon(svc)
-	// ok2 := initSesgrid(s)
+	ok2 := initSendGrid(svc)
 
-	if !<-ok1 {
+	if !(<-ok1 && <-ok2) {
 		return nil, fmt.Errorf("Cannot initialize '%s' service", svc.name)
 	}
 
 	s = addLogging(svc, svc.logger)
-	// s = addTracing(svc)
+	// s = addTracing(svc) // TODO: Implement.
 	s = addInstrumentation(svc, svc.logger)
 	s = addAuthentication(svc, svc.logger, svc.auth)
 
@@ -89,7 +88,31 @@ func initAmazon(svc *service) chan bool {
 				"level", config.LogLevel.Error,
 				"package", "main",
 				"method", "initAmazon",
-				"message", "Cannot initialize Amazon SES client.",
+				"message", "Cannot initialize Amazon SES provider.",
+				"error", err.Error(),
+			)
+			ok <- false
+			return
+		}
+		svc.mux.Lock()
+		svc.providers = append(svc.providers, p)
+		svc.mux.Unlock()
+		ok <- true
+	}()
+	return ok
+}
+
+func initSendGrid(svc *service) chan bool {
+	ok := make(chan bool)
+	go func() {
+		defer close(ok)
+		p, err := sendgrid.Init(svc.ctx, svc.cfg, svc.logger)
+		if err != nil {
+			svc.logger.Log(
+				"level", config.LogLevel.Error,
+				"package", "main",
+				"method", "initSendGreid",
+				"message", "Cannot initialize SendGrid provider.",
 				"error", err.Error(),
 			)
 			ok <- false
