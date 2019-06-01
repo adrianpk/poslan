@@ -9,6 +9,7 @@ package amazon
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/go-kit/kit/log"
@@ -24,20 +25,25 @@ import (
 
 // SESProvider is an Amazon SES delivery provider.
 type SESProvider struct {
-	ctx    context.Context
-	cfg    *config.Config
-	logger log.Logger
-	client *ses.SES
+	ctx      context.Context
+	cfg      *config.Config
+	logger   log.Logger
+	client   *ses.SES
+	name     string
+	priority int
 }
 
 // Init amazon SES mail server handler.
 func Init(ctx context.Context, cfg *config.Config, log log.Logger) (*SESProvider, error) {
+	ok := cfg.HasProviderType(config.ProviderType.AmazonSES)
+	if !ok {
+		return nil, errors.New("no config associated to an Amazon SES provider")
+	}
 	return newProvider(ctx, cfg, log)
 }
 
 // Send an email.
 func (p *SESProvider) Send(em *model.Email) (resend bool, err error) {
-
 	email := newSESEmail(em.From, em.To, em.CC, em.BCC, em.Subject, em.Body, em.Charset)
 	result, err := p.client.SendEmail(email)
 
@@ -118,7 +124,7 @@ func newSESEmail(from, to, cc, bcc, subject, body, charset string) *ses.SendEmai
 
 func newProvider(ctx context.Context, cfg *config.Config, logger log.Logger) (*SESProvider, error) {
 	// Create an AmazonSESS session.
-	_, ok := cfg.Provider(config.ProviderType.AmazonSES)
+	p, ok := cfg.Provider(config.ProviderType.AmazonSES)
 	if !ok {
 		return nil, fmt.Errorf("no provider of type '%s' in config", config.ProviderType.AmazonSES)
 	}
@@ -137,11 +143,23 @@ func newProvider(ctx context.Context, cfg *config.Config, logger log.Logger) (*S
 	clt := ses.New(sess)
 
 	return &SESProvider{
-		ctx:    ctx,
-		cfg:    cfg,
-		logger: logger,
-		client: clt,
+		ctx:      ctx,
+		cfg:      cfg,
+		logger:   logger,
+		client:   clt,
+		name:     p.Name,
+		priority: p.Priority,
 	}, nil
+}
+
+// Name return the provider name.
+func (p *SESProvider) Name() string {
+	return p.name
+}
+
+// Priority return the provider priorit
+func (p *SESProvider) Priority() int {
+	return p.priority
 }
 
 // Start the mailer.

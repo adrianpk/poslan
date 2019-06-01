@@ -22,6 +22,11 @@ type Worker interface {
 
 // Provider is mail delivery service interface.
 type Provider interface {
+	// Name return the provider name.
+	Name() string
+	// Priority return the provider priority
+	Priority() int
+	// Start provider.
 	Start() error
 	// Stop provider.
 	Stop() error

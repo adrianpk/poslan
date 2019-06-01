@@ -9,6 +9,7 @@ package sendgrid
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/adrianpk/poslan/internal/config"
@@ -20,14 +21,20 @@ import (
 
 // SGProvider is a mail delivery provider.
 type SGProvider struct {
-	ctx    context.Context
-	cfg    *config.Config
-	logger log.Logger
-	client *sg.Client
+	ctx      context.Context
+	cfg      *config.Config
+	logger   log.Logger
+	client   *sg.Client
+	name     string
+	priority int
 }
 
 // Init amazon SendGrid mail server handler.
 func Init(ctx context.Context, cfg *config.Config, log log.Logger) (*SGProvider, error) {
+	ok := cfg.HasProviderType(config.ProviderType.SendGrid)
+	if !ok {
+		return nil, errors.New("no config associated to an SesGrid provider")
+	}
 	return newProvider(ctx, cfg, log)
 }
 
@@ -35,24 +42,11 @@ func Init(ctx context.Context, cfg *config.Config, log log.Logger) (*SGProvider,
 func (p *SGProvider) Send(em *model.Email) (resend bool, err error) {
 
 	email := newSGEmail(em.From, em.To, em.CC, em.BCC, em.Subject, em.Body, em.Charset)
-	response, err := p.client.Send(email)
+	_, err = p.client.Send(email)
 
 	if err != nil {
-		p.logger.Log(
-			"level", config.LogLevel.Info,
-			"package", "sendgrid",
-			"method", "Send",
-			"result", response.StatusCode,
-		)
 		return true, err
 	}
-
-	p.logger.Log(
-		"level", config.LogLevel.Info,
-		"package", "sendgrid",
-		"method", "Send",
-		"result", response.StatusCode,
-	)
 
 	return false, nil
 }
@@ -75,11 +69,23 @@ func newProvider(ctx context.Context, cfg *config.Config, logger log.Logger) (*S
 	clt := sg.NewSendClient(p.APIKey)
 
 	return &SGProvider{
-		ctx:    ctx,
-		cfg:    cfg,
-		logger: logger,
-		client: clt,
+		ctx:      ctx,
+		cfg:      cfg,
+		logger:   logger,
+		client:   clt,
+		name:     p.Name,
+		priority: p.Priority,
 	}, nil
+}
+
+// Name return the provider name.
+func (p *SGProvider) Name() string {
+	return p.name
+}
+
+// Priority return the provider priorit
+func (p *SGProvider) Priority() int {
+	return p.priority
 }
 
 // Start the mailer.
