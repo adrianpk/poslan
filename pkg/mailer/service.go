@@ -58,25 +58,33 @@ func (s *service) Send(ctx context.Context, to, cc, bcc, subject, body string) e
 	fromEmail := s.Config().Mailer.Providers[0].Sender.Email
 
 	p1, ok := s.ProviderByPriority(1)
+
 	if !ok {
 		return errors.New("no providers configured")
 	}
 
 	p2, ok2 := s.ProviderByPriority(2)
 
-	m := makeEmail(fromName, fromEmail, to, cc, bcc, subject, body)
-	resend, err := p1.Send(m)
+	e := makeEmail(fromName, fromEmail, to, cc, bcc, subject, body)
+	resend, err := p1.Send(e)
 
-	// Previous atempt failed and and second provider enabled.
-	if resend && ok2 {
-		resend, err = p2.Send(m)
+	// Previous atempt failed and and a second provider enabled.
+	if resend && ok2 || true {
+		resend, err = p2.Send(e)
 	}
 
-	if resend {
-		return fmt.Errorf("email '%s' cannot be sent: %s", m.ID, err.Error())
+	if err != nil {
+		msg := fmt.Sprintf("Cannot send email with ID: '%s'.", e.ID)
+		s.logger.Log(
+			"level", config.LogLevel.Error,
+			"package", "mailer",
+			"method", "Send",
+			"message", msg,
+			"error", err.Error(),
+		)
 	}
 
-	return nil
+	return err
 }
 
 // Providers returns service providers.
@@ -125,8 +133,8 @@ func (s *service) Logger() log.Logger {
 // ProviderByPriority returns a provider by
 // its prioririty (1..n)
 func (s *service) ProviderByPriority(priority int) (p sys.Provider, ok bool) {
-	for i, p := range s.providers {
-		if i == priority-1 {
+	for _, p := range s.providers {
+		if priority == p.Priority() {
 			return p, true
 		}
 	}
