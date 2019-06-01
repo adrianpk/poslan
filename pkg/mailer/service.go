@@ -68,7 +68,7 @@ func (s *service) Send(ctx context.Context, to, cc, bcc, subject, body string) e
 	e := makeEmail(fromName, fromEmail, to, cc, bcc, subject, body)
 	resend, err := p1.Send(e)
 
-	// Previous atempt failed and and a second provider enabled.
+	// Previous attempt failed and a second provider enabled.
 	if resend && ok2 || true {
 		resend, err = p2.Send(e)
 	}
