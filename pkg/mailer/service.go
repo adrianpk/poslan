@@ -10,7 +10,6 @@ package mailer
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 
 	"github.com/adrianpk/poslan/internal/config"
@@ -56,33 +55,39 @@ func (s *service) Send(ctx context.Context, to, cc, bcc, subject, body string) e
 	// They are set by authentication middleware.
 	fromName := s.Config().Mailer.Providers[0].Sender.Name
 	fromEmail := s.Config().Mailer.Providers[0].Sender.Email
+	e := makeEmail(fromName, fromEmail, to, cc, bcc, subject, body)
 
 	p1, ok := s.ProviderByPriority(1)
-
 	if !ok {
 		return errors.New("no providers configured")
 	}
 
-	p2, ok2 := s.ProviderByPriority(2)
-
-	e := makeEmail(fromName, fromEmail, to, cc, bcc, subject, body)
 	resend, err := p1.Send(e)
 
-	// Previous attempt failed and a second provider enabled.
-	if resend && ok2 || true {
-		resend, err = p2.Send(e)
-	}
+	p2, ok2 := s.ProviderByPriority(2)
 
-	if err != nil {
-		msg := fmt.Sprintf("Cannot send email with ID: '%s'.", e.ID)
-		s.logger.Log(
-			"level", config.LogLevel.Error,
-			"package", "mailer",
-			"method", "Send",
-			"message", msg,
-			"error", err.Error(),
-		)
+	// Previous attempt failed and a second provider enabled.
+	if resend && ok2 {
+		resend, err = p2.Send(e)
+		if err != nil {
+			s.logger.Log(
+				"level", config.LogLevel.Error,
+				"package", "mailer",
+				"method", "Send",
+				"error", err.Error(),
+			)
+		}
 	}
+	// if err != nil {
+	// 	msg := fmt.Sprintf("Cannot send email with ID: '%s'.", e.ID)
+	// 	s.logger.Log(
+	// 		"level", config.LogLevel.Error,
+	// 		"package", "mailer",
+	// 		"method", "Send",
+	// 		"message", msg,
+	// 		"error", err.Error(),
+	// 	)
+	// }
 
 	return err
 }

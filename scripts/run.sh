@@ -23,7 +23,7 @@ export PROVIDER_SENDER_NAME_1=SendMailTest
 export PROVIDER_SENDER_EMAIL_1=sendmailtest@sharklasers.com
 # These are example values.
 # The keys are not real.
-# These kind of values should not be contro versioned.
+# These kind of values should not be control versioned.
 export AWS_ACCESS_KEY_ID=BKIAHI2FF3AHO1ZMJEXJ
 export AWS_SECRET_KEY=2BiWmd2Hdgmk2rR4plG332bHwvLGiFOcxLLtDy1g
 
@@ -34,6 +34,7 @@ export PROVIDER_ENABLED_2=true
 export PROVIDER_PRIORITY_2=2
 export PROVIDER_SENDER_NAME_2=SendMailTest
 export PROVIDER_SENDER_EMAIL_2=sendmailtest@sharkslasers.com
+export PROVIDER_API_KEY_2=AB.ZaPo123TTseXyZ1uoj-oJg.rggK2pSAf8NABAhpiKf88RKx9D_hb2a-223Bo0YX"KL
 
 # Start
 # Ref.: Fresh - https://github.com/gravityblast/fresh
