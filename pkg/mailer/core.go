@@ -12,6 +12,8 @@ import (
 	"errors"
 	"fmt"
 	cmlog "log"
+	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
@@ -249,10 +251,45 @@ func checkError(err error, msg ...string) {
 	}
 }
 
-// TestRun lets start the service for testing purposes.
-func TestRun(cfg *config.Config) {
+// TestingRun lets start the service for testing purposes.
+// Basically a copy of Run but where you can pass a custom config.
+func TestingRun(cfg *config.Config, errchan chan error) {
 	setUpEnv(cfg)
-	Run()
+
+	// Context
+	ctx, cancel := context.WithCancel(context.Background())
+	go checkSigTerm(cancel)
+
+	// Logger
+	logger := makeLogger()
+
+	// Config
+	cfg, err := c.Load(logger)
+	checkError(err)
+
+	// Service
+	svc, err := makeService(ctx, cfg, logger).Init()
+	checkError(err)
+
+	// Handlers
+	http.Handle("/signin", SignInHandler(svc))
+	http.Handle("/signout", SignOutHandler(svc))
+	http.Handle("/send", SendHandler(svc))
+
+	// Listen
+	listener, err := net.Listen("tcp", cfg.App.ServerPortFmt())
+	if err != nil {
+		errchan <- err
+		return
+	}
+
+	// Serve
+	if err := http.Serve(listener, nil); err != nil {
+		errchan <- err
+		return
+	}
+
+	errchan <- nil
 }
 
 // setUpEnv let setup environment variables for testing purposes.

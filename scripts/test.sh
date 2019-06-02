@@ -5,6 +5,7 @@ make build
 # Free ports
 killall -9 main
 killall -9 runner-build
+killall -9 mailer.test
 
 # Set environment variables
 # App
@@ -40,4 +41,4 @@ export PROVIDER_SENDER_EMAIL_2=sendmailtest@sharkslasers.com
 export PROVIDER_API_KEY_2=AB.ZaPo123TTseXyZ1uoj-oJg.rggK2pSAf8NABAhpiKf88RKx9D_hb2a-223Bo0YX22
 
 # Start
-make test-mailer
+go test -v github.com/adrianpk/poslan/pkg/mailer
