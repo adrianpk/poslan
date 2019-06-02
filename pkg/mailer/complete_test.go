@@ -23,8 +23,6 @@ var (
 	signinURL      string
 	signoutURL     string
 	sendURL        string
-	user1          = "5958b185-8150-4aae-b53f-0c44771ddec5"
-	user2          = "3c05e701-b495-4443-b454-2c37e2ecccdf"
 )
 
 func init() {
@@ -48,9 +46,6 @@ func TestSomething(t *testing.T) {
 
 // TestSendIntegration is a base unit test reference.
 func TestSendIntegration(t *testing.T) {
-	// handlers := &MyHandler{}
-	// server := httptest.NewServer(handlers)
-	// defer server.Close()
 
 	if testing.Short() {
 		t.Skip("Skiping integration test.")
@@ -68,6 +63,8 @@ func TestSendIntegration(t *testing.T) {
 		}
 	}
 	`
+	// TODO: Implement pre-authentication
+	// And update header with Bearer Token data.
 	reader := strings.NewReader(emailJSON)
 	req, _ := http.NewRequest("POST", sendURL, reader)
 
