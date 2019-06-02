@@ -5,6 +5,7 @@ make build
 # Free ports
 killall -9 main
 killall -9 runner-build
+killall -9 mailer.test
 
 # Set environment variables
 # App
