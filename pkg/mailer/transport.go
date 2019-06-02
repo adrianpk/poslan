@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	c "github.com/adrianpk/poslan/internal/config"
+	"github.com/adrianpk/poslan/pkg/auth"
 	httptransport "github.com/go-kit/kit/transport/http"
 )
 
@@ -21,11 +22,11 @@ const (
 
 var (
 	authTokenCtxKey = contextKey("auth-token")
+	userDataCtxKey  = contextKey("user-data")
 )
 
 // Run the mailer service.
 func Run() {
-
 	// Context
 	ctx, cancel := context.WithCancel(context.Background())
 	go checkSigTerm(cancel)
@@ -62,7 +63,7 @@ func SignInHandler(svc Service) *httptransport.Server {
 
 // SignOutHandler manages signout up process.
 func SignOutHandler(svc Service) *httptransport.Server {
-	opts := httptransport.ServerBefore(tokenToContext)
+	opts := httptransport.ServerBefore(userDataToContext)
 	return httptransport.NewServer(
 		makeSignOutEndpoint(svc),
 		decodeSignOutRequest,
@@ -73,7 +74,7 @@ func SignOutHandler(svc Service) *httptransport.Server {
 
 // SendHandler manages email sending.
 func SendHandler(svc Service) *httptransport.Server {
-	opts := httptransport.ServerBefore(tokenToContext)
+	opts := httptransport.ServerBefore(userDataToContext)
 	return httptransport.NewServer(
 		makeSendEndpoint(svc),
 		decodeSendRequest,
@@ -93,7 +94,7 @@ func decodeSignInRequest(ctx context.Context, r *http.Request) (interface{}, err
 
 func decodeSignOutRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	var request signOutRequest
-	tokenToContext(ctx, r)
+	userDataToContext(ctx, r)
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return nil, err
@@ -104,7 +105,7 @@ func decodeSignOutRequest(ctx context.Context, r *http.Request) (interface{}, er
 
 func decodeSendRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	var request sendRequest
-	tokenToContext(ctx, r)
+	userDataToContext(ctx, r)
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return nil, err
@@ -118,7 +119,7 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 	return json.NewEncoder(w).Encode(response)
 }
 
-// tokenToContext read bearer token from request header.
+// userDataToContext read bearer token from request header.
 func readToken(r *http.Request) (string, error) {
 	token := r.Header.Get("Authorization")
 	splitToken := strings.Split(token, "Bearer")
@@ -128,13 +129,22 @@ func readToken(r *http.Request) (string, error) {
 	return strings.TrimSpace(splitToken[1]), nil
 }
 
-// tokenToContext extracts bearer token from request header and stores it
+// userDataToContext extracts bearer token from request header and stores it
 // in context.
-func tokenToContext(ctx context.Context, r *http.Request) context.Context {
-	token := r.Header.Get("Authorization")
-	token, err := readToken(r)
+func userDataToContext(ctx context.Context, r *http.Request) context.Context {
+	tk := r.Header.Get("Authorization")
+	tk, err := readToken(r)
 	if err != nil {
 		return ctx
 	}
-	return context.WithValue(ctx, authTokenCtxKey, token)
+
+	ud, err := auth.UserData(tk)
+	if err != nil {
+		return ctx
+	}
+
+	ctx = context.WithValue(ctx, userDataCtxKey, ud)
+	ctx = context.WithValue(ctx, authTokenCtxKey, tk)
+
+	return ctx
 }

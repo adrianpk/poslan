@@ -51,10 +51,10 @@ func (s *service) SignOut(ctx context.Context, id uuid.UUID) error {
 
 // Send lets the user send a mail.
 func (s *service) Send(ctx context.Context, to, cc, bcc, subject, body string) error {
-	// FIX: take following two values from those stored in context
-	// They are set by authentication middleware.
-	fromName := s.Config().Mailer.Providers[0].Sender.Name
-	fromEmail := s.Config().Mailer.Providers[0].Sender.Email
+	ud := (ctx.Value(userDataCtxKey)).(map[string]string)
+	fromName := ud["username"]
+	fromEmail := ud["email"]
+
 	e := makeEmail(fromName, fromEmail, to, cc, bcc, subject, body)
 
 	p1, ok := s.ProviderByPriority(1)
@@ -64,30 +64,30 @@ func (s *service) Send(ctx context.Context, to, cc, bcc, subject, body string) e
 
 	resend, err := p1.Send(e)
 
+	if err != nil {
+		s.logger.Log(
+			"level", config.LogLevel.Error,
+			"package", "mailer",
+			"method", "Send",
+			"error", err.Error(),
+		)
+	}
+
 	p2, ok2 := s.ProviderByPriority(2)
 
 	// Previous attempt failed and a second provider enabled.
 	if resend && ok2 {
 		resend, err = p2.Send(e)
-		if err != nil {
-			s.logger.Log(
-				"level", config.LogLevel.Error,
-				"package", "mailer",
-				"method", "Send",
-				"error", err.Error(),
-			)
-		}
 	}
-	// if err != nil {
-	// 	msg := fmt.Sprintf("Cannot send email with ID: '%s'.", e.ID)
-	// 	s.logger.Log(
-	// 		"level", config.LogLevel.Error,
-	// 		"package", "mailer",
-	// 		"method", "Send",
-	// 		"message", msg,
-	// 		"error", err.Error(),
-	// 	)
-	// }
+
+	if err != nil {
+		s.logger.Log(
+			"level", config.LogLevel.Error,
+			"package", "mailer",
+			"method", "Send",
+			"error", err.Error(),
+		)
+	}
 
 	return err
 }

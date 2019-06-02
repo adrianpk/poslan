@@ -64,7 +64,6 @@ func newSGEmail(from, to, cc, bcc, subject, body, charset string) *sgmail.SGMail
 	tb := body
 	hb := fmt.Sprintf("<html><html><div>%s</div></body></html>", body)
 	e := sgmail.NewSingleEmail(f, s, t, tb, hb)
-	fmt.Printf("EMAIL is %+v\n", e)
 	return e
 }
 

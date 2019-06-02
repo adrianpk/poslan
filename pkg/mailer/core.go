@@ -248,3 +248,33 @@ func checkError(err error, msg ...string) {
 		os.Exit(1)
 	}
 }
+
+// TestRun lets start the service for testing purposes.
+func TestRun(cfg *config.Config) {
+	setUpEnv(cfg)
+	Run()
+}
+
+// setUpEnv let setup environment variables for testing purposes.
+// TODO: Check well-formedness of provided config.
+// TODO: Supply default values if appropiate.
+func setUpEnv(cfg *config.Config) {
+	os.Setenv("POSLAN_SERVER_PORT", fmt.Sprintf("%d", cfg.App.ServerPort))
+	os.Setenv("POSLAN_LOG_LEVEL", string(cfg.App.LogLevel))
+	// Provider 1
+	os.Setenv("PROVIDER_NAME_1", cfg.Mailer.Providers[0].Name)
+	os.Setenv("PROVIDER_TYPE_1", cfg.Mailer.Providers[0].Type)
+	os.Setenv("PROVIDER_PRIORITY_1", fmt.Sprintf("%d", cfg.Mailer.Providers[0].Priority))
+	os.Setenv("PROVIDER_SENDER_NAME_1", cfg.Mailer.Providers[0].Sender.Name)
+	os.Setenv("PROVIDER_SENDER_EMAIL_1", cfg.Mailer.Providers[0].Sender.Email)
+	os.Setenv("PROVIDER_ID_KEY_1", cfg.Mailer.Providers[0].IDKey)
+	os.Setenv("PROVIDER_API_KEY_1", cfg.Mailer.Providers[0].APIKey)
+	// Provider 1
+	os.Setenv("PROVIDER_NAME_2", cfg.Mailer.Providers[1].Name)
+	os.Setenv("PROVIDER_TYPE_2", cfg.Mailer.Providers[1].Type)
+	os.Setenv("PROVIDER_PRIORITY_2", fmt.Sprintf("%d", cfg.Mailer.Providers[1].Priority))
+	os.Setenv("PROVIDER_SENDER_NAME_2", cfg.Mailer.Providers[1].Sender.Name)
+	os.Setenv("PROVIDER_SENDER_EMAIL_2", cfg.Mailer.Providers[1].Sender.Email)
+	os.Setenv("PROVIDER_ID_KEY_2", cfg.Mailer.Providers[1].IDKey)
+	os.Setenv("PROVIDER_API_KEY_2", cfg.Mailer.Providers[1].APIKey)
+}

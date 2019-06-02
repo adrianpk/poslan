@@ -47,6 +47,8 @@ github.com/go-logfmt/logfmt
 github.com/golang/protobuf/proto
 # github.com/google/uuid v1.1.1
 github.com/google/uuid
+# github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
+github.com/heptiolabs/healthcheck
 # github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af
 github.com/jmespath/go-jmespath
 # github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
@@ -77,5 +79,5 @@ github.com/sendgrid/rest
 # github.com/sendgrid/sendgrid-go v3.4.1+incompatible
 github.com/sendgrid/sendgrid-go
 github.com/sendgrid/sendgrid-go/helpers/mail
-# gopkg.in/yaml.v2 v2.2.2
+# gopkg.in/yaml.v2 v2.2.1
 gopkg.in/yaml.v2

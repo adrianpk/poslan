@@ -9,6 +9,7 @@ import (
 	"github.com/adrianpk/poslan/pkg/model"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/go-kit/kit/log"
+	"github.com/google/uuid"
 )
 
 const (
@@ -35,12 +36,20 @@ type Server struct {
 
 type customClaims struct {
 	ClientID string `json:"clientID"`
+	UserID   string `json:"userID"`
+	Username string `json:"username"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
 	jwt.StandardClaims
 }
 
-func generateToken(signingKey []byte, clientID string) (string, error) {
+func generateToken(signingKey []byte, clientID string, user *model.User) (string, error) {
 	claims := customClaims{
 		clientID,
+		user.ID.String(),
+		user.Username,
+		user.Name,
+		user.Email,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Second * expSeconds).Unix(),
 			IssuedAt:  jwt.TimeFunc().Unix(),
@@ -53,7 +62,10 @@ func generateToken(signingKey []byte, clientID string) (string, error) {
 // Authenticate a user.
 func (s Server) Authenticate(clientID string, clientSecret string) (string, error) {
 	if s.validSecret(clientID, clientSecret) {
-		signed, err := generateToken(s.signingKey(), clientID)
+
+		user := s.userBySecret(clientSecret)
+
+		signed, err := generateToken(s.signingKey(), clientID, user)
 		if err != nil {
 			return "", errors.New("token generation error")
 		}
@@ -117,13 +129,21 @@ func (s Server) validSecret(clientID, secret string) (valid bool) {
 // some persistence mechanism.
 func (s Server) users() map[string]*model.User {
 	s.usersDB = make(map[string]*model.User)
+	iddp, _ := uuid.Parse("a4d50605-54b0-4c80-a7ef-60b6516998cc")
 	s.usersDB["a5ee54c8a21a4c61820f88f14c30fa5b"] = &model.User{
+		ID:       iddp,
 		Username: "Diana Prince",
 		Password: "3ae61c5e5af2276ee452237e573a8cf",
+		Name:     "Diana",
+		Email:    "diana.p@gmail.com",
 	}
+	idck, _ := uuid.Parse("c6da610a-d858-401d-8f0a-381cc6d6921a")
 	s.usersDB["98d28599e5554a9ea4ada53feae924ff"] = &model.User{
+		ID:       idck,
 		Username: "Clark Kent",
 		Password: "64cd0e8b4a00b7d22f40b124413ad16d",
+		Name:     "Clarck",
+		Email:    "clark.k@gmail.com",
 	}
 	return s.usersDB
 }
@@ -157,4 +177,44 @@ func (s Server) Context() context.Context {
 // Config returns service config.
 func (s *Server) Config() *config.Config {
 	return s.cfg
+}
+
+// UserData extract and return username and email from token.
+func UserData(tokenString string) (userData map[string]string, err error) {
+	userData = make(map[string]string)
+	cs, err := GetClaims(tokenString)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for key, val := range cs {
+		if key == "clientID" {
+			userData["clientID"] = val.(string)
+		}
+		if key == "userID" {
+			userData["userID"] = val.(string)
+		}
+		if key == "Name" {
+			userData["name"] = val.(string)
+		}
+		if key == "email" {
+			userData["email"] = val.(string)
+		}
+	}
+
+	return userData, nil
+}
+
+// GetClaims extract and return claims from token.
+func GetClaims(tokenString string) (jwt.MapClaims, error) {
+	claims := jwt.MapClaims{}
+	_, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte("55a124b9"), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return claims, nil
 }

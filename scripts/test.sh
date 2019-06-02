@@ -40,8 +40,4 @@ export PROVIDER_SENDER_EMAIL_2=sendmailtest@sharkslasers.com
 export PROVIDER_API_KEY_2=AB.ZaPo123TTseXyZ1uoj-oJg.rggK2pSAf8NABAhpiKf88RKx9D_hb2a-223Bo0YX22
 
 # Start
-# Ref.: Fresh - https://github.com/gravityblast/fresh
-# go get github.com/pilu/fresh
-# fresh
-fresh ./main.go
-# go run --race main.go
+make test-mailer
