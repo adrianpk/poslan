@@ -16,6 +16,9 @@ import (
 // Integration test only: go test -run Integration
 
 var (
+	protocol       = "http"
+	host           = "localhost"
+	port           = 8080
 	serverInstance *httptest.Server
 	signinURL      string
 	signoutURL     string
@@ -23,6 +26,12 @@ var (
 	user1          = "5958b185-8150-4aae-b53f-0c44771ddec5"
 	user2          = "3c05e701-b495-4443-b454-2c37e2ecccdf"
 )
+
+func init() {
+	signinURL = fmt.Sprintf("%s://%s:%d/signin", protocol, host, port)
+	signoutURL = fmt.Sprintf("%s://%s:%d/signout", protocol, host, port)
+	sendURL = fmt.Sprintf("%s://%s:%d/send", protocol, host, port)
+}
 
 func TestMain(m *testing.M) {
 	setup()
@@ -68,24 +77,35 @@ func TestSendIntegration(t *testing.T) {
 		t.Logf("[ERROR] TestSendIntegration error: %s", err.Error())
 	}
 
-	if res.StatusCode != http.StatusAccepted {
-		t.Errorf("Expected: 202 - StatusAccepted | Received: Status: %d - %s", res.StatusCode, http.StatusText(res.StatusCode))
+	if res.StatusCode != http.StatusOK {
+		t.Errorf("Expected: 200 - StatusOK | Received: Status: %d - %s", res.StatusCode, http.StatusText(res.StatusCode))
 	}
 }
 
 func setup() {
-	// serverInstance := httptest.NewServer(handler.AppHandler(TestBootstrap))
 	cfg, err := configForTest()
 	if err != nil {
 		log.Println("[ERROR] Cannot run test: Invalid configuraration.")
 		os.Exit(1)
 	}
-	TestRun(cfg)
-	fmt.Println("Setup")
+
+	errchan := make(chan error)
+
+	go TestingRun(cfg, errchan)
+
+	select {
+	case err = <-errchan:
+		msg := fmt.Sprintf("test setup cannot be completed completed: %s", err.Error())
+		log.Printf("[ERROR] %s", msg)
+		os.Exit(1)
+
+	default:
+		log.Println("Setup completed.")
+	}
 }
 
 func teardown() {
-	fmt.Println("Teardown")
+	log.Println("Teardown completed")
 }
 
 // TODO: Implement a custom leader only used for test.
@@ -93,7 +113,6 @@ func teardown() {
 // internal/config/loadFromFile(filePath string)
 // Although it is probably easy to edit those values stright here
 func configForTest() (*config.Config, error) {
-
 	// Uncomment and edit if you need to add custom values.
 	// os.Setenv("KEY1", "VAL1")
 	// os.Setenv("KEY2", "VAL2")
@@ -101,13 +120,13 @@ func configForTest() (*config.Config, error) {
 
 	// App
 	app := config.AppConfig{
-		ServerPort: 8080,
+		ServerPort: port,
 		LogLevel:   config.LogLevel.Debug,
 	}
 
 	provider1 := config.ProviderConfig{
 		Name:     "amazon",
-		Type:     "amazon-test",
+		Type:     "amazon-ses",
 		Enabled:  true,
 		Priority: 1,
 		IDKey:    config.GetEnvOrDef("PROVIDER_ID_KEY_1", ""),
@@ -115,8 +134,8 @@ func configForTest() (*config.Config, error) {
 	}
 
 	provider2 := config.ProviderConfig{
-		Name:     "",
-		Type:     "",
+		Name:     "sendgrid",
+		Type:     "sendgrid",
 		Enabled:  true,
 		Priority: 1,
 		IDKey:    config.GetEnvOrDef("PROVIDER_ID_KEY_2", ""),
@@ -134,6 +153,8 @@ func configForTest() (*config.Config, error) {
 		App:    app,
 		Mailer: mailers,
 	}
+
+	// fmt.Printf("\n%+v\n", cfg)
 
 	return cfg, nil
 }
