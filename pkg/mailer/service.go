@@ -51,10 +51,10 @@ func (s *service) SignOut(ctx context.Context, id uuid.UUID) error {
 
 // Send lets the user send a mail.
 func (s *service) Send(ctx context.Context, to, cc, bcc, subject, body string) error {
-	// FIX: take following two values from those stored in context
-	// They are set by authentication middleware.
-	fromName := s.Config().Mailer.Providers[0].Sender.Name
-	fromEmail := s.Config().Mailer.Providers[0].Sender.Email
+	ud := (ctx.Value(userDataCtxKey)).(map[string]string)
+	fromName := ud["username"]
+	fromEmail := ud["email"]
+
 	e := makeEmail(fromName, fromEmail, to, cc, bcc, subject, body)
 
 	p1, ok := s.ProviderByPriority(1)
