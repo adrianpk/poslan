@@ -1,5 +1,6 @@
 main
 poslan
-scripts/run2.sh
+scripts/run_priv.sh
+scripts/test_priv.sh
 docs/private
 tmp/
