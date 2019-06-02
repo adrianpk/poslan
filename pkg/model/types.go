@@ -17,6 +17,8 @@ type User struct {
 	Username       string
 	Password       string
 	PasswordDigest string
+	Name           string
+	Email          string
 }
 
 // Email model
