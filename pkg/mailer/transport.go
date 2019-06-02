@@ -27,7 +27,6 @@ var (
 
 // Run the mailer service.
 func Run() {
-
 	// Context
 	ctx, cancel := context.WithCancel(context.Background())
 	go checkSigTerm(cancel)

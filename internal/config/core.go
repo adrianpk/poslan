@@ -64,8 +64,8 @@ func loadProvidersFromEnvars() []ProviderConfig {
 
 	// Providers envvar value prefixes
 	pfxs := []string{"PROVIDER_NAME", "PROVIDER_TYPE", "PROVIDER_ENABLED",
-		"PROVIDER_PRIORITY", "PROVIDER_SENDER_NAME",
-		"PROVIDER_SENDER_EMAIL", "PROVIDER_ID_KEY", "PROVIDER_API_KEY"}
+		"PROVIDER_PRIORITY", "PROVIDER_SENDER_NAME", "PROVIDER_SENDER_EMAIL",
+		"PROVIDER_ID_KEY", "PROVIDER_API_KEY"}
 	envall := composeName(pfxs, n) // PROVIDER_NAME_1, PROVIDER_TYPE_1... PROVIDER_SENDER_EMAIL_2
 
 	ps := make([]ProviderConfig, 0)
