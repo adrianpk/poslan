@@ -42,7 +42,14 @@ build-linux:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GO_BUILD) -o $(BINARY_UNIX) -v
 
 test:
+	# Be sure to set up environment variables that apply for your case.
+	# PROVIDER_ID_KEY_1, PROVIDER_API_KEY_2, AWS_ACCESS_KEY_ID, AWS_SECRET_KEY
 	$(GO_TEST) -v ./...
+
+test-mailer:
+	# Be sure to set up environment variables that apply for your case.
+	# PROVIDER_ID_KEY_1, PROVIDER_API_KEY_2, AWS_ACCESS_KEY_ID, AWS_SECRET_KEY
+	go test github.com/adrianpk/poslan/pkg/mailer
 
 clean:
 	$(GO_CLEAN)
