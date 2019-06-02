@@ -1,10 +1,14 @@
 # Poslan
 A redundant mail delivery system.
 
-# Test
+## Test
 ```bash
 $ make test-mailer
 ```
+
+## SPA Client
+
+**[Poslan-cli](https://github.com/adrianpk/poslan-cli)**
 
 ## Make
 **Main commands**
