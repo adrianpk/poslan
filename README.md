@@ -1,10 +1,14 @@
 # Poslan
 A redundant mail delivery system.
 
-# Test
+## Test
 ```bash
 $ make test-mailer
 ```
+
+## SPA Client
+
+**[Poslan-cli](https://github.com/adrianpk/poslan-cli)**
 
 ## Make
 **Main commands**
@@ -12,16 +16,16 @@ $ make test-mailer
 ```bash
 all
 build
-test
+tests
 clean
 run
 deps
 build-stage
 ```
 
-See `makefile` for new additions.
+See [`makefile`](makefile) for new additions.
 
-## Test
+## Curl Test
 
 ```bash
 $ ./resources/rest/signin.sh
@@ -30,4 +34,4 @@ $ ./resources/rest/send.sh
 
 ## Notes
 **This is a kind of PoC, in a real world app**
-* Container environment variables should be available in control version repository.
+* Container environment variables should not be under version control.
