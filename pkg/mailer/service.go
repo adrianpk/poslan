@@ -64,30 +64,30 @@ func (s *service) Send(ctx context.Context, to, cc, bcc, subject, body string) e
 
 	resend, err := p1.Send(e)
 
+	if err != nil {
+		s.logger.Log(
+			"level", config.LogLevel.Error,
+			"package", "mailer",
+			"method", "Send",
+			"error", err.Error(),
+		)
+	}
+
 	p2, ok2 := s.ProviderByPriority(2)
 
 	// Previous attempt failed and a second provider enabled.
 	if resend && ok2 {
 		resend, err = p2.Send(e)
-		if err != nil {
-			s.logger.Log(
-				"level", config.LogLevel.Error,
-				"package", "mailer",
-				"method", "Send",
-				"error", err.Error(),
-			)
-		}
 	}
-	// if err != nil {
-	// 	msg := fmt.Sprintf("Cannot send email with ID: '%s'.", e.ID)
-	// 	s.logger.Log(
-	// 		"level", config.LogLevel.Error,
-	// 		"package", "mailer",
-	// 		"method", "Send",
-	// 		"message", msg,
-	// 		"error", err.Error(),
-	// 	)
-	// }
+
+	if err != nil {
+		s.logger.Log(
+			"level", config.LogLevel.Error,
+			"package", "mailer",
+			"method", "Send",
+			"error", err.Error(),
+		)
+	}
 
 	return err
 }
